@@ -1,0 +1,52 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Faculties{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Faculties</h4>
+
+<form method="POST" class="card p-3 mb-4">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+  <input class="form-control mb-2" name="name" placeholder="Faculty Name" required>
+
+<input class="form-control mb-2" name="email" placeholder="Email" required>
+
+<input class="form-control mb-2" name="password" placeholder="Password" required>
+
+
+  <select class="form-select mb-2" name="department_id">
+    {% for d in departments %}
+      <option value="{{ d.id }}">{{ d.name }}</option>
+    {% endfor %}
+  </select>
+
+  <button class="btn btn-primary">Create Faculty</button>
+</form>
+
+<table class="table table-bordered">
+  <thead class="table-light">
+   <tr>
+  <th>Name</th>
+  <th>Email</th>
+  <th>Department</th>
+  <th>Action</th>
+</tr>
+  </thead>
+  <tbody>
+    {% for f in faculties %}
+    <tr>
+     <td>{{ f.name }}</td>
+<td>{{ f.email }}</td>
+<td>{{ f.department.name }}</td>
+
+      <td>
+        <form method="POST" action="{{ url_for('main.delete_faculty', faculty_id=f.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

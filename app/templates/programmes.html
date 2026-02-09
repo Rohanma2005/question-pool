@@ -1,0 +1,71 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Programmes{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Programmes</h4>
+
+<!-- Add Programme -->
+<form method="POST" class="card p-3 mb-4">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+  <div class="row g-2">
+    <div class="col-md-5">
+      <input
+        class="form-control"
+        name="name"
+        placeholder="Programme name"
+        required
+      >
+    </div>
+
+    <div class="col-md-5">
+      <select class="form-select" name="department_id" required>
+        <option value="">Select Department</option>
+        {% for d in departments %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <button class="btn btn-primary w-100">Add</button>
+    </div>
+  </div>
+</form>
+
+<!-- Programmes Table -->
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th>Name</th>
+      <th>Department</th>
+      <th width="180">Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for p in programmes %}
+    <tr>
+      <td>{{ p.name }}</td>
+      <td>{{ p.department.name }}</td>
+      <td class="d-flex gap-2">
+        <a
+          href="{{ url_for('main.programme_detail', programme_id=p.id) }}"
+          class="btn btn-sm btn-outline-primary"
+        >
+          View
+        </a>
+
+        <form
+          method="POST"
+          action="{{ url_for('main.delete_programme', programme_id=p.id) }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

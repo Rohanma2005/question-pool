@@ -1,0 +1,34 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Departments{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Departments</h4>
+
+<form method="POST" class="mb-4">
+  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+  <div class="input-group">
+    <input class="form-control" name="dept_name" placeholder="Department name">
+    <button class="btn btn-primary">Add</button>
+  </div>
+</form>
+
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr><th>ID</th><th>Name</th><th>Action</th></tr>
+  </thead>
+  <tbody>
+    {% for d in departments %}
+    <tr>
+      <td>{{ d.id }}</td>
+      <td>{{ d.name }}</td>
+      <td>
+        <form method="POST" action="{{ url_for('main.delete_department', dept_id=d.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

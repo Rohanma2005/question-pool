@@ -1,0 +1,17 @@
+<div class="sidebar">
+  <h5 class="sidebar-title">Super Admin</h5>
+
+  <ul class="sidebar-menu">
+    <li class="{{ 'active' if request.path == '/superadmin/dashboard' else '' }}">
+      <a href="{{ url_for('main.superadmin_dashboard') }}">Departments</a>
+    </li>
+
+    <li class="{{ 'active' if request.path.startswith('/superadmin/faculties') else '' }}">
+      <a href="{{ url_for('main.faculty_management') }}">Faculties</a>
+    </li>
+
+    <li class="{{ 'active' if request.path.startswith('/superadmin/programmes') else '' }}">
+      <a href="{{ url_for('main.programme_management') }}">Programmes</a>
+    </li>
+  </ul>
+</div>

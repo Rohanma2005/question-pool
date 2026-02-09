@@ -1,0 +1,25 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Programme Details{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Programme Details</h4>
+
+<div class="card p-3 mb-4">
+  <p class="mb-1"><strong>Name:</strong> {{ programme.name }}</p>
+  <p class="mb-0">
+    <strong>Department:</strong> {{ programme.department.name }}
+  </p>
+</div>
+
+<!-- Placeholder: future content -->
+<div class="alert alert-secondary">
+  Courses, semesters, and faculty mappings will appear here.
+</div>
+
+<a
+  href="{{ url_for('main.programme_management') }}"
+  class="btn btn-secondary"
+>
+  ← Back to Programmes
+</a>
+{% endblock %}
