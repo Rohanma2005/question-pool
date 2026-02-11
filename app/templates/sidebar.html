@@ -13,5 +13,12 @@
     <li class="{{ 'active' if request.path.startswith('/superadmin/programmes') else '' }}">
       <a href="{{ url_for('main.programme_management') }}">Programmes</a>
     </li>
+
+    <li>
+  <a href="{{ url_for('courses.manage_courses') }}">
+    Courses
+  </a>
+</li>
+
   </ul>
 </div>

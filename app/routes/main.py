@@ -2,11 +2,12 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from werkzeug.security import generate_password_hash, check_password_hash
 from ..extensions import db
-from ..models import SuperAdmin, Faculty, Department, Programme
+from ..models import SuperAdmin, Faculty, Department, Programme, ProgrammeCourseOffering , Course
 from functools import wraps
 import secrets
 
 main_bp = Blueprint('main', __name__)
+
 
 # =====================================================
 # DECORATORS
@@ -189,11 +190,86 @@ def programme_management():
                          programmes=programmes, 
                          departments=departments)
 
-@main_bp.route('/superadmin/programmes/<int:programme_id>', methods=['GET'])
+@main_bp.route(
+    '/superadmin/programmes/<int:programme_id>',
+    methods=['GET', 'POST']
+)
+
 @super_admin_required
 def programme_detail(programme_id):
     programme = Programme.query.get_or_404(programme_id)
-    return render_template('programme_detail.html', programme=programme)
+    departments = Department.query.order_by(Department.name).all()
+
+    semester_no = request.args.get('semester', 1, type=int)
+    if semester_no < 1 or semester_no > 6:
+        semester_no = 1
+
+    # ==========================
+    # HANDLE ADD COURSE (POST)
+    # ==========================
+    if request.method == 'POST':
+        course_id = request.form.get('course_id', type=int)
+        faculty_id = request.form.get('faculty_id', type=int)
+
+        if not course_id or not faculty_id:
+            flash('Course and faculty are required', 'error')
+            return redirect(
+                url_for(
+                    'programme_detail.programme_detail',
+                    programme_id=programme.id,
+                    semester=semester_no
+                )
+            )
+
+        # Prevent duplicate course in programme
+        exists = ProgrammeCourseOffering.query.filter_by(
+            programme_id=programme.id,
+            course_id=course_id
+        ).first()
+
+        if exists:
+            flash('This course is already added to the programme', 'error')
+        else:
+            offering = ProgrammeCourseOffering(
+                programme_id=programme.id,
+                course_id=course_id,
+                semester_no=semester_no,
+                faculty_id=faculty_id
+            )
+            db.session.add(offering)
+            db.session.commit()
+            flash('Course added to semester successfully', 'success')
+
+        return redirect(
+            url_for(
+                'main.programme_detail',
+                programme_id=programme.id,
+                semester=semester_no
+            )
+        )
+
+    # ==========================
+    # GET DATA FOR VIEW
+    # ==========================
+    offerings = ProgrammeCourseOffering.query.filter_by(
+        programme_id=programme.id,
+        semester_no=semester_no
+    ).all()
+
+    courses = Course.query.order_by(Course.code).all()
+    faculties = Faculty.query.order_by(Faculty.name).all()
+
+    return render_template(
+    'programme_detail.html',
+    programme=programme,
+    semester_no=semester_no,
+    offerings=offerings,
+    courses=courses,
+    faculties=faculties,
+    departments=departments
+)
+
+
 
 # =====================================================
 # DELETE ROUTES

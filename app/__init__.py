@@ -1,5 +1,7 @@
 # app/__init__.py
 from flask import Flask
+
+from app.routes import register_routes
 from .config import DevelopmentConfig
 from .extensions import db, migrate
 import os
@@ -35,6 +37,12 @@ def create_app(config_object=None):
 
     from .routes.api_programmes import api_programme_bp
     app.register_blueprint(api_programme_bp, url_prefix='/api/programmes')
+
+    from app.routes import register_routes
+    register_routes(app)
+
+
+    
 
     @app.context_processor
     def inject_user():

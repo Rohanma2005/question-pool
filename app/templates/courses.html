@@ -1,0 +1,59 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Courses{% endblock %}
+
+{% block content %}
+<h4 class="mb-3">Courses</h4>
+
+<!-- Create Course -->
+<div class="card p-3 mb-4">
+  <h5 class="mb-3">Create New Course</h5>
+
+  <form method="POST">
+    <div class="row g-3">
+      <div class="col-md-3">
+        <label class="form-label">Course Code</label>
+        <input class="form-control" name="code" placeholder="CS101" required>
+      </div>
+
+      <div class="col-md-5">
+        <label class="form-label">Course Title</label>
+        <input class="form-control" name="title" placeholder="Data Structures" required>
+      </div>
+
+      <div class="col-md-4">
+        <label class="form-label">Home Department</label>
+        <select class="form-select" name="department_id" required>
+          <option value="">Select department</option>
+          {% for d in departments %}
+            <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100 mt-4">Create</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Course List -->
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th>Code</th>
+      <th>Title</th>
+      <th>Department</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for c in courses %}
+      <tr>
+        <td>{{ c.code }}</td>
+        <td>{{ c.title }}</td>
+        <td>{{ c.home_department.name }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

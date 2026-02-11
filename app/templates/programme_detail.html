@@ -2,8 +2,12 @@
 {% block title %}Programme Details{% endblock %}
 
 {% block content %}
+<script src="{{ url_for('static', filename='js/course_filter.js') }}"></script>
+
+
 <h4 class="mb-3">Programme Details</h4>
 
+<!-- Programme Info -->
 <div class="card p-3 mb-4">
   <p class="mb-1"><strong>Name:</strong> {{ programme.name }}</p>
   <p class="mb-0">
@@ -11,15 +15,111 @@
   </p>
 </div>
 
-<!-- Placeholder: future content -->
-<div class="alert alert-secondary">
-  Courses, semesters, and faculty mappings will appear here.
+<!-- Semester Tabs -->
+<ul class="nav nav-tabs mb-3">
+  {% for sem in range(1, 7) %}
+    <li class="nav-item">
+      <a
+        class="nav-link {% if sem == semester_no %}active{% endif %}"
+        href="{{ url_for('main.programme_detail',
+                         programme_id=programme.id,
+                         semester=sem) }}"
+      >
+        Semester {{ sem }}
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+
+<!-- Add Course to Semester -->
+<div class="card p-3 mb-4">
+  <h5 class="mb-3">Add Course to Semester {{ semester_no }}</h5>
+
+  <form method="POST">
+    <div class="row g-3">
+
+      <!-- Department -->
+      <div class="col-md-4">
+        <label class="form-label">Department</label>
+        <select
+  class="form-select"
+  id="departmentSelect"
+  required
+>
+  <option value="">Select department</option>
+  {% for d in departments %}
+    <option value="{{ d.id }}">{{ d.name }}</option>
+  {% endfor %}
+</select>
+
+      </div>
+
+      <!-- Course -->
+      <div class="col-md-4">
+        <label class="form-label">Course</label>
+        <select
+          class="form-select"
+          name="course_id"
+          id="courseSelect"
+          required
+          disabled
+        >
+          <option value="">Select course</option>
+        </select>
+      </div>
+
+      <!-- Faculty -->
+      <div class="col-md-4">
+        <label class="form-label">Faculty</label>
+        <select class="form-select" name="faculty_id" required>
+          <option value="">Select faculty</option>
+          {% for f in faculties %}
+            <option value="{{ f.id }}">{{ f.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2 d-flex align-items-end">
+        <button class="btn btn-primary w-100">Add</button>
+      </div>
+
+    </div>
+  </form>
 </div>
 
-<a
-  href="{{ url_for('main.programme_management') }}"
-  class="btn btn-secondary"
->
-  ← Back to Programmes
-</a>
+
+
+
+<!-- Course Offerings Table -->
+ <!-- Course Offerings Table -->
+<div class="card p-3">
+  <h5 class="mb-3">Semester {{ semester_no }} Courses</h5>
+
+  {% if offerings %}
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Course Code</th>
+          <th>Course Title</th>
+          <th>Faculty</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for offering in offerings %}
+          <tr>
+            <td>{{ offering.course.code }}</td>
+            <td>{{ offering.course.title }}</td>
+            <td>{{ offering.faculty.name }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-secondary mb-0">
+      No courses assigned for this semester.
+    </div>
+  {% endif %}
+</div>
+
 {% endblock %}
