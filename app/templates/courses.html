@@ -25,7 +25,7 @@
         <select class="form-select" name="department_id" required>
           <option value="">Select department</option>
           {% for d in departments %}
-            <option value="{{ d.id }}">{{ d.name }}</option>
+          <option value="{{ d.id }}">{{ d.name }}</option>
           {% endfor %}
         </select>
       </div>
@@ -37,8 +37,23 @@
   </form>
 </div>
 
+<div class="card p-3 mb-3">
+  <div class="row">
+    <div class="col-md-4">
+      <label class="form-label">Filter by Department</label>
+      <select class="form-select" id="courseFilterDept">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}">{{ d.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </div>
+</div>
+
+
 <!-- Course List -->
-<table class="table table-bordered">
+<table class="table table-bordered" id="coursesTable">
   <thead class="table-light">
     <tr>
       <th>Code</th>
@@ -46,14 +61,17 @@
       <th>Department</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody id="coursesTableBody">
     {% for c in courses %}
-      <tr>
-        <td>{{ c.code }}</td>
-        <td>{{ c.title }}</td>
-        <td>{{ c.home_department.name }}</td>
-      </tr>
+    <tr>
+      <td>{{ c.code }}</td>
+      <td>{{ c.title }}</td>
+      <td>{{ c.home_department.name }}</td>
+    </tr>
     {% endfor %}
   </tbody>
 </table>
+<script src="{{ url_for('static', filename='js/course_table_filter.js') }}"></script>
+
+
 {% endblock %}

@@ -28,3 +28,25 @@ def courses_by_department():
         }
         for c in courses
     ])
+
+@courses_api_bp.route('/', methods=['GET'])
+@super_admin_required
+def get_courses():
+    department_id = request.args.get('department_id', type=int)
+
+    query = Course.query
+
+    if department_id:
+        query = query.filter_by(home_department_id=department_id)
+
+    courses = query.order_by(Course.code).all()
+
+    return jsonify([
+        {
+            "id": c.id,
+            "code": c.code,
+            "title": c.title,
+            "department": c.home_department.name
+        }
+        for c in courses
+    ])
