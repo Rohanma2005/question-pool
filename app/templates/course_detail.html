@@ -1,0 +1,111 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Course Detail{% endblock %}
+
+{% block content %}
+
+<h4 class="mb-3">
+  {{ course.code }} — {{ course.title }}
+</h4>
+
+<!-- ===============================
+     Assigned Faculties
+================================ -->
+<div class="card p-3 mb-4">
+  <h5>Assigned Faculties</h5>
+
+  {% if assigned_faculties %}
+    <ul>
+      {% for f in assigned_faculties %}
+        <li>{{ f.name }} ({{ f.email }})</li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="alert alert-secondary mb-0">
+      No faculty currently assigned.
+    </div>
+  {% endif %}
+</div>
+
+<!-- ===============================
+     Course Outcomes
+================================ -->
+<div class="card p-3 mb-4">
+  <h5>Course Outcomes</h5>
+
+  <!-- Add CO Form -->
+  <form method="POST" class="mb-3">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+    <div class="row g-3">
+      <div class="col-md-2">
+        <input class="form-control" name="co_code" placeholder="CO1" required>
+      </div>
+      <div class="col-md-8">
+        <input class="form-control" name="co_description"
+               placeholder="Describe the course outcome"
+               required>
+      </div>
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">Add CO</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- CO List -->
+  {% if course_outcomes %}
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for co in course_outcomes %}
+          <tr>
+            <td>{{ co.code }}</td>
+            <td>{{ co.description }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-secondary">
+      No course outcomes added yet.
+    </div>
+  {% endif %}
+</div>
+
+<!-- ===============================
+     Topics
+================================ -->
+<div class="card p-3">
+  <h5>Topics</h5>
+
+  {% if topics %}
+    <table class="table table-bordered">
+      <thead class="table-light">
+        <tr>
+          <th>Code</th>
+          <th>Title</th>
+          <th>CO</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in topics %}
+          <tr>
+            <td>{{ t.code }}</td>
+            <td>{{ t.title }}</td>
+            <td>{{ t.co.code }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-secondary">
+      No topics added yet.
+    </div>
+  {% endif %}
+</div>
+
+{% endblock %}

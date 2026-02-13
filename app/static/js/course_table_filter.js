@@ -14,7 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const response = await fetch(url)
-            const courses = await response.json
+
+            if (!response.ok) {
+                console.error("API error:", response.status)
+                return
+            }
+
+            const courses = await response.json()  // ✅ FIXED
+
+            if (!Array.isArray(courses)) {
+                console.error("Expected array but got:", courses)
+                return
+            }
 
             tableBody.innerHTML = ''
 
@@ -22,10 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const row = document.createElement('tr')
 
                 row.innerHTML = `
-          <td>${course.code}</td>
-          <td>${course.title}</td>
-          <td>${course.department}</td>
-        `
+                    <td>${course.code}</td>
+                    <td>${course.title}</td>
+                    <td>${course.department}</td>
+                `
 
                 tableBody.appendChild(row)
             })

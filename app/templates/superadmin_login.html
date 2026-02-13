@@ -13,6 +13,17 @@
   <div class="card p-4" style="width:360px;">
     <h4 class="text-center mb-3">Super Admin Login</h4>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+
     <form method="POST">
       <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 

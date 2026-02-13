@@ -59,6 +59,7 @@
       <th>Code</th>
       <th>Title</th>
       <th>Department</th>
+      <th width="180">Actions</th>
     </tr>
   </thead>
   <tbody id="coursesTableBody">
@@ -67,6 +68,14 @@
       <td>{{ c.code }}</td>
       <td>{{ c.title }}</td>
       <td>{{ c.home_department.name }}</td>
+      <td class="d-flex gap-2">
+        <a
+          href="{{ url_for('courses.course_detail', course_id=c.id) }}"
+          class="btn btn-sm btn-outline-primary"
+        >
+          View
+        </a>
+        </td>
     </tr>
     {% endfor %}
   </tbody>

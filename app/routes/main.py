@@ -25,8 +25,12 @@ def super_admin_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session or session.get('role') != 'super_admin':
+           if request.endpoint and request.endpoint.startswith('main.superadmin_login'):
+            return redirect(url_for('main.superadmin_login'))
+
             flash('Access denied', 'error')
             return redirect(url_for('main.superadmin_login'))
+
         return f(*args, **kwargs)
     return decorated_function
 
@@ -201,8 +205,9 @@ def programme_detail(programme_id):
     departments = Department.query.order_by(Department.name).all()
 
     semester_no = request.args.get('semester', 1, type=int)
-    if semester_no < 1 or semester_no > 6:
-        semester_no = 1
+    if semester_no < 1 or semester_no > 8:
+     semester_no = 1
+
 
     # ==========================
     # HANDLE ADD COURSE (POST)

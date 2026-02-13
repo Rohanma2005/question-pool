@@ -190,9 +190,10 @@ class ProgrammeCourseOffering(db.Model):
             name='uq_programme_course_once'
         ),
         db.CheckConstraint(
-            'semester_no BETWEEN 1 AND 6',
-            name='chk_semester_range'
-        ),
+    'semester_no BETWEEN 1 AND 8',
+    name='chk_semester_range'
+)
+,
     )
 
 
