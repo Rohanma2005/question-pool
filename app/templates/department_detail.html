@@ -1,0 +1,41 @@
+{% extends "layout_dashboard.html" %}
+{% block title %}Department Detail{% endblock %}
+
+{% block content %}
+
+<h4 class="mb-3">{{ department.name }}</h4>
+
+<div class="card p-3">
+  <h5>Assign Head of Department (HOD)</h5>
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <select class="form-select" name="hod_id">
+          <option value="">Select Faculty</option>
+          {% for f in faculties %}
+            <option value="{{ f.id }}"
+              {% if department.hod_id == f.id %}selected{% endif %}>
+              {{ f.name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <button class="btn btn-primary">Assign / Update</button>
+      </div>
+    </div>
+  </form>
+
+  {% if department.hod %}
+    <div class="mt-3 alert alert-info">
+      Current HOD: {{ department.hod.name }}
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

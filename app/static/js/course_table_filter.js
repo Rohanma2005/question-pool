@@ -36,6 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>${course.code}</td>
                     <td>${course.title}</td>
                     <td>${course.department}</td>
+                    <td class="d-flex gap-2">
+                        <a href="/superadmin/courses/${course.id}" class="btn btn-sm btn-outline-primary">
+                            View
+                        </a>
+                    </td>
                 `
 
                 tableBody.appendChild(row)

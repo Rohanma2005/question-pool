@@ -29,6 +29,19 @@ class Department(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), unique=True, nullable=False)
 
+    # HOD reference
+    hod_id = db.Column(
+        db.Integer,
+        db.ForeignKey('tbl_faculty.id'),
+        nullable=True
+    )
+
+    hod = db.relationship(
+        'Faculty',
+        foreign_keys=[hod_id],
+        post_update=True
+    )
+
     programmes = db.relationship(
         'Programme',
         backref='department',
@@ -40,8 +53,11 @@ class Department(db.Model):
         'Faculty',
         backref='department',
         cascade='all,delete',
-        lazy=True
+        lazy=True,
+        foreign_keys='Faculty.department_id'   # ✅ CRITICAL FIX
     )
+
+
 
 
 # =====================================================
@@ -229,7 +245,7 @@ class Topic(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(32))  # e.g., 1.1
-    title = db.Column(db.String(256), nullable=False)
+    title = db.Column(db.Text, nullable=False)
 
     parent_topic_id = db.Column(
         db.Integer,

@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.models import Course
-from app.routes.main import super_admin_required
+from app.utils.auth import super_admin_required
 
 courses_api_bp = Blueprint(
     'courses_api',

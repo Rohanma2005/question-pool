@@ -17,16 +17,17 @@
     <tr><th>ID</th><th>Name</th><th>Action</th></tr>
   </thead>
   <tbody>
-    {% for d in departments %}
+    {% for dept in departments %}
     <tr>
-      <td>{{ d.id }}</td>
-      <td>{{ d.name }}</td>
-      <td>
-        <form method="POST" action="{{ url_for('main.delete_department', dept_id=d.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-          <button class="btn btn-sm btn-danger">Delete</button>
-        </form>
-      </td>
+      <td>{{ dept.id }}</td>
+      <td>{{ dept.name }}</td>
+     <td>
+  <a href="{{ url_for('departments.department_detail', dept_id=dept.id) }}"
+     class="btn btn-sm btn-outline-primary">
+     View
+  </a>
+</td>
+
     </tr>
     {% endfor %}
   </tbody>

@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from app.models import Course, Department
 from app.extensions import db
-from app.routes.main import super_admin_required
+from app.utils.auth import super_admin_required
 
 courses_bp = Blueprint(
     'courses',

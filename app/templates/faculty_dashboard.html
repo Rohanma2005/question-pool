@@ -1,0 +1,40 @@
+{% extends "layout_dashboard.html" %}
+{% block content %}
+
+<h4 class="mb-4">My Assigned Courses</h4>
+
+{% if offerings %}
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Course Code</th>
+        <th>Course Title</th>
+        <th>Programme</th>
+        <th>Semester</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for offering in offerings %}
+        <tr>
+          <td>{{ offering.course.code }}</td>
+          <td>{{ offering.course.title }}</td>
+          <td>{{ offering.programme.name }}</td>
+          <td>Semester {{ offering.semester_no }}</td>
+          <td>
+            <a href="{{ url_for('courses.course_detail', course_id=offering.course.id) }}"
+               class="btn btn-sm btn-outline-primary">
+               View
+            </a>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}
+  <div class="alert alert-secondary">
+    No course assignments found.
+  </div>
+{% endif %}
+
+{% endblock %}

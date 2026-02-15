@@ -35,6 +35,8 @@
   <!-- Add CO Form -->
   <form method="POST" class="mb-3">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <input type="hidden" name="form_type" value="add_co">
+
 
     <div class="row g-3">
       <div class="col-md-2">
@@ -55,19 +57,72 @@
   {% if course_outcomes %}
     <table class="table table-bordered">
       <thead class="table-light">
-        <tr>
-          <th>Code</th>
-          <th>Description</th>
-        </tr>
-      </thead>
+  <tr>
+    <th>Code</th>
+    <th>Description</th>
+    <th width="180">Action</th>
+  </tr>
+</thead>
+
       <tbody>
-        {% for co in course_outcomes %}
-          <tr>
-            <td>{{ co.code }}</td>
-            <td>{{ co.description }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
+  {% for co in course_outcomes %}
+    <tr>
+      <td>{{ co.code }}</td>
+      <td>{{ co.description }}</td>
+      <td>
+        <button
+          class="btn btn-sm btn-outline-primary"
+          onclick="toggleEditForm({{ co.id }})"
+        >
+          Edit
+        </button>
+      </td>
+    </tr>
+
+    <!-- Hidden Edit Row -->
+    <tr id="edit-row-{{ co.id }}" style="display:none;">
+      <td colspan="3">
+        <form
+          method="POST"
+          action="{{ url_for('courses.edit_course_outcome', co_id=co.id) }}"
+          class="row g-2"
+        >
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+          <div class="col-md-2">
+            <input
+              class="form-control"
+              name="co_code"
+              value="{{ co.code }}"
+              required
+            >
+          </div>
+
+          <div class="col-md-7">
+            <input
+              class="form-control"
+              name="co_description"
+              value="{{ co.description }}"
+              required
+            >
+          </div>
+
+          <div class="col-md-3">
+            <button class="btn btn-success btn-sm">Save</button>
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              onclick="toggleEditForm({{ co.id }})"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+</tbody>
+
     </table>
   {% else %}
     <div class="alert alert-secondary">
@@ -79,25 +134,158 @@
 <!-- ===============================
      Topics
 ================================ -->
+
+
+<div class="card p-3 mb-4">
+  <h5>Add Topic</h5>
+
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <input type="hidden" name="form_type" value="add_topic">
+
+    <div class="row g-3">
+
+      <!-- Topic Code -->
+      <div class="col-md-2">
+        <label class="form-label">Topic ID</label>
+        <input
+          class="form-control"
+          name="topic_code"
+          placeholder="1.1"
+          required
+        >
+      </div>
+
+      <!-- CO Selection -->
+      <div class="col-md-3">
+        <label class="form-label">Course Outcome</label>
+        <select class="form-select" name="co_id" required>
+          <option value="">Select CO</option>
+          {% for co in course_outcomes %}
+            <option value="{{ co.id }}">
+              {{ co.code }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Topic Description -->
+      <div class="col-md-7">
+        <label class="form-label">Topic Description</label>
+        <textarea
+          class="form-control"
+          name="topic_title"
+          rows="3"
+          placeholder="Enter detailed topic description..."
+          required
+        ></textarea>
+      </div>
+
+      <div class="col-md-2">
+        <button class="btn btn-primary w-100">
+          Add Topic
+        </button>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+
+<!-- ===============================
+     Topics Table
+================================ -->
 <div class="card p-3">
   <h5>Topics</h5>
 
   {% if topics %}
-    <table class="table table-bordered">
+    <table class="table table-bordered table-striped">
       <thead class="table-light">
         <tr>
-          <th>Code</th>
-          <th>Title</th>
-          <th>CO</th>
+          <th width="100">Topic ID</th>
+          <th>Description</th>
+          <th width="100">CO</th>
+          <th width="120">Action</th>
         </tr>
       </thead>
+
       <tbody>
         {% for t in topics %}
           <tr>
             <td>{{ t.code }}</td>
-            <td>{{ t.title }}</td>
+
+            <td style="white-space: pre-line;">
+              {{ t.title }}
+            </td>
+
             <td>{{ t.co.code }}</td>
+
+            <td>
+              <button
+                class="btn btn-sm btn-outline-primary"
+                onclick="toggleTopicEdit({{ t.id }})"
+              >
+                Edit
+              </button>
+            </td>
           </tr>
+
+          <!-- Hidden Edit Row -->
+          <tr id="edit-topic-{{ t.id }}" style="display:none;">
+            <td colspan="4">
+              <form
+                method="POST"
+                action="{{ url_for('courses.edit_topic', topic_id=t.id) }}"
+                class="row g-2"
+              >
+                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+
+                <div class="col-md-2">
+                  <input
+                    class="form-control"
+                    name="topic_code"
+                    value="{{ t.code }}"
+                    required
+                  >
+                </div>
+
+                <div class="col-md-3">
+                  <select class="form-select" name="co_id" required>
+                    {% for co in course_outcomes %}
+                      <option
+                        value="{{ co.id }}"
+                        {% if co.id == t.co_id %}selected{% endif %}
+                      >
+                        {{ co.code }}
+                      </option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-md-5">
+                  <textarea
+                    class="form-control"
+                    name="topic_title"
+                    rows="3"
+                    required
+                  >{{ t.title }}</textarea>
+                </div>
+
+                <div class="col-md-2">
+                  <button class="btn btn-success btn-sm">Save</button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick="toggleTopicEdit({{ t.id }})"
+                  >
+                    Cancel
+                  </button>
+                </div>
+
+              </form>
+            </td>
+          </tr>
+
         {% endfor %}
       </tbody>
     </table>
@@ -107,5 +295,27 @@
     </div>
   {% endif %}
 </div>
+
+
+
+
+<script>
+function toggleEditForm(coId) {
+  const row = document.getElementById(`edit-row-${coId}`)
+  if (!row) return
+
+  row.style.display = row.style.display === 'none' ? '' : 'none'
+}
+
+
+function toggleTopicEdit(id) {
+  const row = document.getElementById(`edit-topic-${id}`)
+  if (!row) return
+  row.style.display = row.style.display === 'none' ? '' : 'none'
+}
+</script>
+
+
+
 
 {% endblock %}
