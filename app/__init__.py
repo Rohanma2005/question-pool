@@ -1,9 +1,10 @@
 # app/__init__.py
-from flask import Flask
+from flask import Flask, session
 
 from app.routes import register_routes
 from .config import DevelopmentConfig
 from .extensions import db, migrate
+from datetime import timedelta
 import os
 
 
@@ -16,10 +17,18 @@ def create_app(config_object=None):
     
     # Set secret key for sessions
     app.config['SECRET_KEY'] = app.config.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    
+    # Enable permanent sessions
+    app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Make sessions permanent by default
+    @app.before_request
+    def make_session_permanent():
+        session.permanent = True
 
     # Register blueprints (main routes for HTML views)
     from .routes.main import main_bp

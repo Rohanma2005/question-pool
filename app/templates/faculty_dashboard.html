@@ -1,40 +1,42 @@
-{% extends "layout_dashboard.html" %}
+{% extends "layout_faculty.html" %}
 {% block content %}
 
-<h4 class="mb-4">My Assigned Courses</h4>
+<h4>Welcome, {{ faculty.name }}</h4>
 
-{% if offerings %}
-  <table class="table table-bordered table-striped">
-    <thead class="table-light">
-      <tr>
-        <th>Course Code</th>
-        <th>Course Title</th>
-        <th>Programme</th>
-        <th>Semester</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for offering in offerings %}
+<div class="card mt-3 p-3">
+  <h5>Assigned Courses</h5>
+
+  {% if offerings %}
+    <table class="table table-bordered">
+      <thead>
         <tr>
-          <td>{{ offering.course.code }}</td>
-          <td>{{ offering.course.title }}</td>
-          <td>{{ offering.programme.name }}</td>
-          <td>Semester {{ offering.semester_no }}</td>
-          <td>
-            <a href="{{ url_for('courses.course_detail', course_id=offering.course.id) }}"
-               class="btn btn-sm btn-outline-primary">
-               View
-            </a>
-          </td>
+          <th>Course</th>
+          <th>Programme</th>
+          <th>Semester</th>
+          <th>Action</th>
         </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-{% else %}
-  <div class="alert alert-secondary">
-    No course assignments found.
-  </div>
-{% endif %}
+      </thead>
+      <tbody>
+        {% for o in offerings %}
+          <tr>
+            <td>{{ o.course.code }} - {{ o.course.title }}</td>
+            <td>{{ o.programme.name }}</td>
+            <td>{{ o.semester_no }}</td>
+            <td>
+              <a href="{{ url_for('courses.course_detail', course_id=o.course.id) }}"
+                 class="btn btn-sm btn-outline-primary">
+                 View
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="alert alert-secondary">
+      No assigned courses.
+    </div>
+  {% endif %}
+</div>
 
 {% endblock %}

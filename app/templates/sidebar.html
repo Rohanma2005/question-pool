@@ -21,4 +21,11 @@
 </li>
 
   </ul>
+  <form method="POST" action="{{ url_for('main.logout') }}">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <button class="btn btn-sm btn-outline-danger w-100 mt-3">
+        Logout
+    </button>
+</form>
+
 </div>

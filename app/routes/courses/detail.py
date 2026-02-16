@@ -1,4 +1,5 @@
-from flask import render_template, request, redirect, url_for, flash
+from pydoc_data.topics import topics
+from flask import render_template, request, redirect, session, url_for, flash
 from app.extensions import db
 from app.models import (
     Course,
@@ -6,14 +7,16 @@ from app.models import (
     CourseOutcome,
     Topic
 )
-from app.utils.auth import super_admin_required
+from app.utils.auth import super_admin_required, login_required
 from .routes import courses_bp  # reuse existing blueprint
 
 
 @courses_bp.route('/<int:course_id>', methods=['GET', 'POST'])
-@super_admin_required
+@login_required
 def course_detail(course_id):
     course = Course.query.get_or_404(course_id)
+    is_superadmin = session.get('role') == 'super_admin'
+
 
     # =========================
     # HANDLE POST REQUESTS
@@ -117,12 +120,21 @@ def course_detail(course_id):
         course_id=course.id
     ).all()
 
+    role = session.get('role')
+
+    if role == 'super_admin':
+         layout_template = 'layout_dashboard.html'
+    else:
+        layout_template = 'layout_faculty.html' 
+
     return render_template(
         'course_detail.html',
         course=course,
         assigned_faculties=assigned_faculties,
         course_outcomes=course_outcomes,
-        topics=topics
+        topics=topics,
+        is_superadmin=is_superadmin,
+        layout_template=layout_template
     )
 
 

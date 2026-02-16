@@ -25,43 +25,53 @@ def index():
             return redirect(url_for('main.superadmin_dashboard'))
         else:
             return redirect(url_for('main.faculty_dashboard'))
-    return redirect(url_for('main.superadmin_login'))
+    return redirect(url_for('main.login'))
 
-@main_bp.route('/superadmin/login', methods=['GET', 'POST'])
-def superadmin_login():
+@main_bp.route('/login', methods=['GET', 'POST'])
+def login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
 
         if not email or not password:
             flash('Email and password required', 'error')
-            return redirect(url_for('main.superadmin_login'))
+            return redirect(url_for('main.login'))
 
+        # Try SuperAdmin
         admin = SuperAdmin.query.filter(
-            db.func.lower(db.func.trim(SuperAdmin.email)) == email
+            db.func.lower(SuperAdmin.email) == email
         ).first()
 
         if admin and admin.check_password(password):
             session['user_id'] = admin.id
             session['role'] = 'super_admin'
-            session['email'] = admin.email
-            session['csrf_token'] = secrets.token_hex(32)
-            flash('Login successful!', 'success')
             return redirect(url_for('main.superadmin_dashboard'))
-        else:
-            flash('Invalid credentials', 'error')
-    
-    # Generate CSRF token for login form
-    if 'csrf_token' not in session:
-        session['csrf_token'] = secrets.token_hex(32)
 
-    return render_template('superadmin_login.html')
+        # Try Faculty
+        faculty = Faculty.query.filter(
+            db.func.lower(Faculty.email) == email
+        ).first()
+
+        if faculty and check_password_hash(faculty.password_hash, password):
+            session['user_id'] = faculty.id
+            session['role'] = 'faculty'
+
+            # HOD detection
+            if faculty.department.hod_id == faculty.id:
+                return redirect(url_for('faculty.hod_dashboard'))
+
+            return redirect(url_for('faculty.faculty_dashboard'))
+
+        flash('Invalid credentials', 'error')
+
+    return render_template('login.html')
+
 
 @main_bp.route('/logout', methods=['POST'])
 def logout():
     session.clear()
     flash('You have been logged out', 'success')
-    return redirect(url_for('main.superadmin_login'))
+    return redirect(url_for('main.login'))
 
 # =====================================================
 # SUPER ADMIN DASHBOARD
@@ -293,8 +303,3 @@ def delete_programme(programme_id):
 # =====================================================
 # PLACEHOLDER FOR FACULTY ROUTES
 # =====================================================
-@main_bp.route('/faculty/dashboard', methods=['GET'])
-@login_required
-def faculty_dashboard():
-    # Placeholder for faculty dashboard
-    return render_template('faculty_dashboard.html')
