@@ -1,0 +1,64 @@
+{% extends "layout_dashboard.html" %}
+{% block content %}
+
+<h4>Create Question Paper Template</h4>
+
+<form method="POST">
+
+  <!-- Course Selection -->
+  <div class="mb-3">
+    <label>Select Course</label>
+    <select name="course_id" class="form-select" required>
+      <option value="">-- Select Course --</option>
+      {% for c in courses %}
+        <option value="{{ c.id }}">
+          {{ c.code }} - {{ c.title }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Basic Info -->
+  <div class="row mb-3">
+    <div class="col">
+      <label>Total Marks</label>
+      <input type="number" name="total_marks" class="form-control" required>
+    </div>
+
+    <div class="col">
+      <label>Duration (minutes)</label>
+      <input type="number" name="duration_minutes" class="form-control" required>
+    </div>
+  </div>
+
+  <!-- Section Count -->
+  <div class="mb-3">
+    <label>Number of Sections</label>
+    <input type="number" id="section_count"
+           name="section_count"
+           class="form-control"
+           min="1"
+           required>
+  </div>
+
+  <button type="button"
+          class="btn btn-secondary"
+          onclick="generateSections()">
+      Generate Sections
+  </button>
+
+  <hr>
+
+  <div id="sections-container"></div>
+
+  <br>
+  <button type="submit" class="btn btn-primary">
+      Create Template
+  </button>
+
+</form>
+
+
+<script src="{{ url_for('static', filename='js/template.js') }}"></script>
+
+{% endblock %}

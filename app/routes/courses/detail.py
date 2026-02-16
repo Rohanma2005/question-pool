@@ -7,8 +7,20 @@ from app.models import (
     CourseOutcome,
     Topic
 )
-from app.utils.auth import super_admin_required, login_required
+from app.utils.auth import admin_or_hod_required, login_required
 from .routes import courses_bp  # reuse existing blueprint
+LEARNING_DOMAINS = {
+    "K": "Remember",
+    "U": "Understand",
+    "A": "Apply",
+    "An": "Analyse",
+    "E": "Evaluate",
+    "C": "Create",
+    "S": "Skill",
+    "I": "Interest",
+    "Ap": "Appreciation"
+}
+
 
 
 @courses_bp.route('/<int:course_id>', methods=['GET', 'POST'])
@@ -44,11 +56,19 @@ def course_detail(course_id):
             if existing:
                 flash('CO code already exists for this course', 'error')
             else:
+                selected_domains = request.form.getlist('learning_domains')
+
+                if not selected_domains:
+                    flash('Select at least one learning domain', 'error')
+                    return redirect(request.url)
+
                 co = CourseOutcome(
                     code=co_code,
                     description=co_description,
-                    course_id=course.id
+                    course_id=course.id,
+                    learning_domains=selected_domains
                 )
+
                 db.session.add(co)
                 db.session.commit()
                 flash('Course Outcome added successfully', 'success')
@@ -134,7 +154,9 @@ def course_detail(course_id):
         course_outcomes=course_outcomes,
         topics=topics,
         is_superadmin=is_superadmin,
-        layout_template=layout_template
+        layout_template=layout_template,
+        learning_domains=LEARNING_DOMAINS
+
     )
 
 
@@ -144,15 +166,16 @@ def course_detail(course_id):
     '/co/<int:co_id>/edit',
     methods=['POST']
 )
-@super_admin_required
+@admin_or_hod_required
 def edit_course_outcome(co_id):
     co = CourseOutcome.query.get_or_404(co_id)
 
     new_code = request.form.get('co_code', '').strip()
     new_description = request.form.get('co_description', '').strip()
+    new_domains = request.form.getlist('learning_domains')
 
-    if not new_code or not new_description:
-        flash('CO code and description are required', 'error')
+    if not new_code or not new_description or not new_domains:
+        flash('CO code, description, and at least one learning domain are required', 'error')
         return redirect(request.referrer)
 
     # Prevent duplicate CO code in same course
@@ -168,6 +191,7 @@ def edit_course_outcome(co_id):
 
     co.code = new_code
     co.description = new_description
+    co.learning_domains = new_domains
 
     db.session.commit()
 
@@ -181,7 +205,7 @@ def edit_course_outcome(co_id):
 # =========================
 
 @courses_bp.route('/topic/<int:topic_id>/edit', methods=['POST'])
-@super_admin_required
+@admin_or_hod_required
 def edit_topic(topic_id):
     topic = Topic.query.get_or_404(topic_id)
 

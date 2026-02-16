@@ -2,6 +2,7 @@ from datetime import datetime
 from .extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 # =====================================================
 # SUPER ADMINS
 # =====================================================
@@ -220,8 +221,11 @@ class CourseOutcome(db.Model):
     __tablename__ = 'tbl_course_outcomes'
 
     id = db.Column(db.Integer, primary_key=True)
-    code = db.Column(db.String(32), nullable=False)  # CO1, CO2
+    code = db.Column(db.String(32), nullable=False)
     description = db.Column(db.Text, nullable=False)
+
+    # NEW FIELD
+    learning_domains = db.Column(db.JSON, nullable=False, default=list)
 
     course_id = db.Column(
         db.Integer,
@@ -229,12 +233,6 @@ class CourseOutcome(db.Model):
         nullable=False
     )
 
-    topics = db.relationship(
-        'Topic',
-        backref='co',
-        cascade='all,delete',
-        lazy=True
-    )
 
 
 # =====================================================
@@ -270,6 +268,13 @@ class Topic(db.Model):
         remote_side=[id],
         backref='children'
     )
+
+    co = db.relationship(
+        'CourseOutcome',
+        backref='topics',
+        foreign_keys=[co_id]
+    )
+    
 
 
 # =====================================================

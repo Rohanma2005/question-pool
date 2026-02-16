@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app.models import Course
-from app.utils.auth import super_admin_required
+from app.utils.auth import admin_or_hod_required
 
 courses_api_bp = Blueprint(
     'courses_api',
@@ -9,7 +9,7 @@ courses_api_bp = Blueprint(
 )
 
 @courses_api_bp.route('/by-department', methods=['GET'])
-@super_admin_required
+@admin_or_hod_required
 def courses_by_department():
     department_id = request.args.get('department_id', type=int)
 
@@ -30,7 +30,7 @@ def courses_by_department():
     ])
 
 @courses_api_bp.route('/', methods=['GET'])
-@super_admin_required
+@admin_or_hod_required
 def get_courses():
     department_id = request.args.get('department_id', type=int)
 

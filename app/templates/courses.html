@@ -9,6 +9,7 @@
   <h5 class="mb-3">Create New Course</h5>
 
   <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
     <div class="row g-3">
       <div class="col-md-3">
         <label class="form-label">Course Code</label>
@@ -22,12 +23,18 @@
 
       <div class="col-md-4">
         <label class="form-label">Home Department</label>
-        <select class="form-select" name="department_id" required>
-          <option value="">Select department</option>
-          {% for d in departments %}
-          <option value="{{ d.id }}">{{ d.name }}</option>
-          {% endfor %}
-        </select>
+       {% if is_superadmin %}
+<select name="department_id" class="form-select">
+  {% for d in departments %}
+    <option value="{{ d.id }}">{{ d.name }}</option>
+  {% endfor %}
+</select>
+{% else %}
+<input type="hidden" name="department_id" value="{{ departments[0].id }}">
+<div class="form-control bg-light">
+  {{ departments[0].name }}
+</div>
+{% endif %}
       </div>
 
       <div class="col-md-2">

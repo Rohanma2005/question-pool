@@ -11,8 +11,12 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/sidebar.css') }}">
 </head>
 <body>
+{% if session.role == 'super_admin' %}
+    {% include "sidebar.html" %}
+{% elif session.role == 'faculty' %}
+    {% include "hod_sidebar.html" %}
+{% endif %}
 
-{% include "sidebar.html" %}
 
 <div style="margin-left:220px; padding:20px;">
   {% with messages = get_flashed_messages(with_categories=true) %}

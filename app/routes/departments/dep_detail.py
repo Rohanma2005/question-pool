@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, Blueprint
 from app.extensions import db
 from app.models import Department, Faculty
-from app.utils.auth import super_admin_required
+from app.utils.auth import admin_or_hod_required
 
 
 departments_bp = Blueprint(
@@ -12,7 +12,7 @@ departments_bp = Blueprint(
 
 
 @departments_bp.route('/<int:dept_id>', methods=['GET', 'POST'])
-@super_admin_required
+@admin_or_hod_required
 def department_detail(dept_id):
     department = Department.query.get_or_404(dept_id)
 

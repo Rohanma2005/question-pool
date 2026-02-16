@@ -9,6 +9,16 @@
 </h4>
 
 <!-- ===============================
+     Template Management
+================================ -->
+<div class="card p-3 mb-4">
+  <h5 class="mb-3">Template Management</h5>
+  <a href="{{ url_for('templates.manage_template', course_id=course.id) }}" class="btn btn-primary">
+    Manage Template
+  </a>
+</div>
+
+<!-- ===============================
      Assigned Faculties
 ================================ -->
 {% if is_superadmin %}
@@ -50,6 +60,32 @@
                placeholder="Describe the course outcome"
                required>
       </div>
+      <div class="col-md-3">
+  <label class="form-label">Learning Domains</label>
+  <div class="dropdown">
+    <button class="btn btn-outline-secondary dropdown-toggle w-100"
+            type="button"
+            data-bs-toggle="dropdown">
+      Select Domains
+    </button>
+    <div class="dropdown-menu p-3" style="max-height:250px; overflow:auto;">
+      {% for code, name in learning_domains.items() %}
+        <div class="form-check">
+          <input class="form-check-input"
+                 type="checkbox"
+                 name="learning_domains"
+                 value="{{ code }}"
+                 id="domain_{{ code }}">
+          <label class="form-check-label"
+                 for="domain_{{ code }}">
+            {{ name }} ({{ code }})
+          </label>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
       <div class="col-md-2">
         <button class="btn btn-primary w-100">Add CO</button>
       </div>
@@ -63,6 +99,8 @@
   <tr>
     <th>Code</th>
     <th>Description</th>
+    <th width="120">Domains</th>
+
     <th width="180">Action</th>
   </tr>
 </thead>
@@ -72,6 +110,14 @@
     <tr>
       <td>{{ co.code }}</td>
       <td>{{ co.description }}</td>
+      <td>
+  {% if co.learning_domains %}
+    {{ co.learning_domains | join(', ') }}
+  {% else %}
+    -
+  {% endif %}
+</td>
+
       <td>
         <button
           class="btn btn-sm btn-outline-primary"
@@ -109,6 +155,21 @@
               required
             >
           </div>
+          <div class="col-md-3">
+  {% for code, name in learning_domains.items() %}
+    <div class="form-check">
+      <input class="form-check-input"
+             type="checkbox"
+             name="learning_domains"
+             value="{{ code }}"
+             {% if co.learning_domains and code in co.learning_domains %}checked{% endif %}>
+      <label class="form-check-label">
+        {{ name }} ({{ code }})
+      </label>
+    </div>
+  {% endfor %}
+</div>
+
 
           <div class="col-md-3">
             <button class="btn btn-success btn-sm">Save</button>

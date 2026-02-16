@@ -5,7 +5,7 @@ from ..extensions import db
 from ..models import SuperAdmin, Faculty, Department, Programme, ProgrammeCourseOffering , Course
 from functools import wraps
 import secrets
-from ..utils.auth import login_required, super_admin_required, verify_csrf_token
+from ..utils.auth import login_required, admin_or_hod_required, verify_csrf_token
 
 main_bp = Blueprint('main', __name__)
 
@@ -24,7 +24,7 @@ def index():
         if session.get('role') == 'super_admin':
             return redirect(url_for('main.superadmin_dashboard'))
         else:
-            return redirect(url_for('main.faculty_dashboard'))
+            return redirect(url_for('faculty.faculty_dashboard'))
     return redirect(url_for('main.login'))
 
 @main_bp.route('/login', methods=['GET', 'POST'])
@@ -58,7 +58,7 @@ def login():
 
             # HOD detection
             if faculty.department.hod_id == faculty.id:
-                return redirect(url_for('faculty.hod_dashboard'))
+                return redirect(url_for('main.superadmin_dashboard'))
 
             return redirect(url_for('faculty.faculty_dashboard'))
 
@@ -76,34 +76,42 @@ def logout():
 # =====================================================
 # SUPER ADMIN DASHBOARD
 # =====================================================
-@main_bp.route('/superadmin/dashboard', methods=['GET', 'POST'])
-@super_admin_required
+@main_bp.route('/superadmin/dashboard')
+@admin_or_hod_required
 def superadmin_dashboard():
-    if request.method == 'POST':
-        if not verify_csrf_token():
-            flash('CSRF token invalid', 'error')
-            return redirect(url_for('main.superadmin_dashboard'))
-            
-        dept_name = request.form.get('dept_name', '').strip()
-        if not dept_name:
-            flash('Department name is required', 'error')
-        elif Department.query.filter_by(name=dept_name).first():
-            flash('Department already exists', 'error')
-        else:
-            dept = Department(name=dept_name)
-            db.session.add(dept)
-            db.session.commit()
-            flash('Department created successfully!', 'success')
-        return redirect(url_for('main.superadmin_dashboard'))
 
-    departments = Department.query.order_by(Department.id.desc()).all()
-    return render_template('superadmin_dashboard.html', departments=departments)
+    role = session.get('role')
+    is_superadmin = session.get('role') == 'super_admin'
+
+    if role == 'super_admin':
+        departments = Department.query.order_by(
+            Department.id.desc()
+        ).all()
+
+        return render_template(
+            'superadmin_dashboard.html',
+            departments=departments,
+            is_superadmin=True
+        )
+
+    elif role == 'faculty':
+        faculty = Faculty.query.get(session['user_id'])
+
+        # HOD goes directly to their department
+        return redirect(
+            url_for(
+                'departments.department_detail',
+                dept_id=faculty.department.id,
+                is_superadmin=is_superadmin
+            )
+        )
+
 
 # =====================================================
 # FACULTY MANAGEMENT
 # =====================================================
 @main_bp.route('/superadmin/faculties', methods=['GET', 'POST'])
-@super_admin_required
+@admin_or_hod_required
 def faculty_management():
     if request.method == 'POST':
         if not verify_csrf_token():
@@ -147,41 +155,76 @@ def faculty_management():
 # PROGRAMME MANAGEMENT
 # =====================================================
 @main_bp.route('/superadmin/programmes', methods=['GET', 'POST'])
-@super_admin_required
+@admin_or_hod_required
 def programme_management():
+
+    role = session.get('role')
+
+    # =========================
+    # Determine Scope
+    # =========================
+    if role == 'super_admin':
+        departments = Department.query.all()
+        programmes_query = Programme.query
+
+    else:  # HOD
+        faculty = Faculty.query.get(session['user_id'])
+        department = faculty.department
+
+        departments = [department]  # HOD can only see own dept
+        programmes_query = Programme.query.filter_by(
+            department_id=department.id
+        )
+
+    # =========================
+    # Handle Create
+    # =========================
     if request.method == 'POST':
-        if not verify_csrf_token():
-            flash('CSRF token invalid', 'error')
-            return redirect(url_for('main.programme_management'))
-            
         name = request.form.get('name', '').strip()
-        department_id = request.form.get('department_id')
+        department_id = request.form.get('department_id', type=int)
 
         if not name or not department_id:
             flash('Programme name and department are required', 'error')
-        else:
-            dept = Department.query.get(department_id)
-            if not dept:
-                flash('Invalid department', 'error')
-            else:
-                programme = Programme(name=name, department_id=department_id)
-                db.session.add(programme)
-                db.session.commit()
-                flash('Programme created successfully!', 'success')
-        return redirect(url_for('main.programme_management'))
+            return redirect(request.url)
 
-    programmes = Programme.query.all()
-    departments = Department.query.all()
-    return render_template('programmes.html', 
-                         programmes=programmes, 
-                         departments=departments)
+        # HOD cannot create in other departments
+        if role == 'faculty':
+            if department_id != department.id:
+                flash('Not authorized for this department', 'error')
+                return redirect(request.url)
+
+        dept = Department.query.get(department_id)
+        if not dept:
+            flash('Invalid department', 'error')
+            return redirect(request.url)
+
+        programme = Programme(
+            name=name,
+            department_id=department_id
+        )
+
+        db.session.add(programme)
+        db.session.commit()
+
+        flash('Programme created successfully', 'success')
+        return redirect(request.url)
+
+    programmes = programmes_query.all()
+
+    return render_template(
+        'programmes.html',
+        programmes=programmes,
+        departments=departments,
+        is_superadmin=(role == 'super_admin')
+    )
+
 
 @main_bp.route(
     '/superadmin/programmes/<int:programme_id>',
     methods=['GET', 'POST']
 )
 
-@super_admin_required
+@admin_or_hod_required
 def programme_detail(programme_id):
     programme = Programme.query.get_or_404(programme_id)
     departments = Department.query.order_by(Department.name).all()
@@ -262,7 +305,7 @@ def programme_detail(programme_id):
 # DELETE ROUTES
 # =====================================================
 @main_bp.route('/departments/<int:dept_id>/delete', methods=['POST'])
-@super_admin_required
+@admin_or_hod_required
 def delete_department(dept_id):
     if not verify_csrf_token():
         flash('CSRF token invalid', 'error')
@@ -275,7 +318,7 @@ def delete_department(dept_id):
     return redirect(url_for('main.superadmin_dashboard'))
 
 @main_bp.route('/faculties/<int:faculty_id>/delete', methods=['POST'])
-@super_admin_required
+@admin_or_hod_required
 def delete_faculty(faculty_id):
     if not verify_csrf_token():
         flash('CSRF token invalid', 'error')
@@ -288,7 +331,7 @@ def delete_faculty(faculty_id):
     return redirect(url_for('main.faculty_management'))
 
 @main_bp.route('/programmes/<int:programme_id>/delete', methods=['POST'])
-@super_admin_required
+@admin_or_hod_required
 def delete_programme(programme_id):
     if not verify_csrf_token():
         flash('CSRF token invalid', 'error')
