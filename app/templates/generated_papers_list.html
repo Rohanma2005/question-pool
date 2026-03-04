@@ -1,0 +1,140 @@
+{% extends "layout_dashboard.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>Question Paper History</h4>
+        <p class="text-muted small mb-0 mt-1">View and download previously generated question papers.</p>
+    </div>
+    {% if grouped_papers %}
+    <a href="{{ url_for('generation.generation_index') }}"
+        class="btn btn-primary shadow-sm d-inline-flex align-items-center gap-2 fw-medium">
+        <i class="bi bi-plus-lg"></i> Generate New
+    </a>
+    {% endif %}
+</div>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div
+    class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm border-0">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+{% if not grouped_papers %}
+<div class="card shadow-sm border-0 bg-light my-5">
+    <div class="card-body text-center p-5">
+        <div class="bg-white p-4 rounded-circle d-inline-block mb-3 shadow-sm text-primary">
+            <i class="bi bi-journal-x fs-1"></i>
+        </div>
+        <h4 class="fw-bold text-dark">No Papers Generated Yet</h4>
+        <p class="text-muted mb-4 max-w-md mx-auto">It looks like you haven't generated any question papers so far. Use
+            the generator to create your first exam paper.</p>
+        <a href="{{ url_for('generation.generation_index') }}"
+            class="btn btn-primary btn-lg shadow-sm fw-medium d-inline-flex align-items-center gap-2">
+            <i class="bi bi-magic"></i> Generate a Paper Now
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="card shadow-sm border-0 bg-transparent">
+    <div class="accordion accordion-flush" id="courseAccordion">
+        {% for course_label, papers in grouped_papers.items() %}
+        <div class="accordion-item border shadow-sm mb-3 rounded-3 overflow-hidden bg-white">
+            <h2 class="accordion-header" id="heading{{ loop.index }}">
+                <button class="accordion-button {{ 'collapsed' if not loop.first else '' }} fw-bold text-dark px-4 py-3"
+                    type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ loop.index }}"
+                    aria-expanded="{{ 'true' if loop.first else 'false' }}" aria-controls="collapse{{ loop.index }}">
+                    <div class="d-flex align-items-center w-100 me-3">
+                        <div class="bg-primary bg-opacity-10 p-2 rounded text-primary me-3">
+                            <i class="bi bi-book fs-5"></i>
+                        </div>
+                        <span class="fs-5">{{ course_label }}</span>
+                        <span class="badge bg-primary rounded-pill ms-auto shadow-sm px-3 py-2">{{ papers|length }}
+                            Paper{% if papers|length > 1 %}s{% endif %}</span>
+                    </div>
+                </button>
+            </h2>
+            <div id="collapse{{ loop.index }}" class="accordion-collapse collapse {{ 'show' if loop.first else '' }}"
+                aria-labelledby="heading{{ loop.index }}" data-bs-parent="#courseAccordion">
+                <div class="accordion-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 border-top">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4 py-3 text-muted small fw-bold text-uppercase">Generated On</th>
+                                    <th class="py-3 text-muted small fw-bold text-uppercase">Paper Details</th>
+                                    <th class="pe-4 py-3 text-end text-muted small fw-bold text-uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in papers %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-light p-2 rounded me-3 text-center border"
+                                                style="min-width: 50px;">
+                                                <span class="d-block fw-bold text-dark fs-5 lh-1">{{
+                                                    p.created_at.strftime('%d') }}</span>
+                                                <span class="small text-muted fw-bold text-uppercase"
+                                                    style="font-size: 0.7rem;">{{ p.created_at.strftime('%b') }}</span>
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ p.created_at.strftime('%Y') }}</div>
+                                                <small class="text-muted d-flex align-items-center gap-1">
+                                                    <i class="bi bi-clock"></i> {{ p.created_at.strftime('%I:%M %p') }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-2">
+                                            <span
+                                                class="badge bg-secondary bg-opacity-10 text-secondary border px-2 py-1"><i
+                                                    class="bi bi-123 me-1"></i> {{ p.total_marks }} Marks</span>
+                                            <span
+                                                class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25 px-2 py-1"><i
+                                                    class="bi bi-stopwatch me-1"></i> {{ p.duration_minutes }}
+                                                Mins</span>
+                                        </div>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{{ url_for('generation.view_paper', paper_id=p.id) }}"
+                                            class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 fw-medium shadow-sm">
+                                            <i class="bi bi-eye"></i> View Paper
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<style>
+    .accordion-button:not(.collapsed) {
+        background-color: var(--bs-primary-bg-subtle, #f8faff);
+        box-shadow: none;
+    }
+
+    .accordion-button:focus {
+        box-shadow: none;
+    }
+
+    .accordion-item .accordion-button::after {
+        filter: invert(0.5) sepia(1) saturate(5) hue-rotate(180deg);
+    }
+</style>
+{% endblock %}

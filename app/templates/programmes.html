@@ -2,70 +2,226 @@
 {% block title %}Programmes{% endblock %}
 
 {% block content %}
-<h4 class="mb-3">Programmes</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Programmes</h4>
+</div>
 
-<!-- Add Programme -->
-<form method="POST" class="card p-3 mb-4">
-  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-
-  <div class="row g-2">
-    <div class="col-md-5">
-      <input
-        class="form-control"
-        name="name"
-        placeholder="Programme name"
-        required
-      >
-    </div>
-
-    <div class="col-md-5">
-      <select class="form-select" name="department_id" required>
-        <option value="">Select Department</option>
-        {% for d in departments %}
+<div class="card p-4 mb-4">
+  <h6 class="fw-bold mb-3 text-muted">Add New Programme</h6>
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <input class="form-control" name="name" placeholder="Name (e.g., B.Tech CS)" required>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="level" required>
+          <option value="ug">Undergraduate (UG)</option>
+          <option value="pg">Postgraduate (PG)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <input class="form-control" name="batch" placeholder="Batch (2023-2027)">
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" name="department_id" id="department_id" required>
+          <option value="" disabled selected>Select Department</option>
+          {% for d in departments %}
           <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-9">
+        <select class="form-select" name="copy_from_id" id="copy_from_id">
+          <option value="">-- Copy Structure From Existing Programme (Optional) --</option>
+          {% for p in programmes if p.is_active %}
+          <option value="{{ p.id }}" data-dept="{{ p.department_id }}" data-level="{{ p.level }}">{{ p.name }} {% if
+            p.batch %}({{ p.batch }}){% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm">
+          <i class="bi bi-plus-circle"></i> Add Programme
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-journal-bookmark me-2 text-primary"></i>Active Programmes</h5>
+    <div class="col-md-3">
+      <select class="form-select" id="filter_department_id" onchange="filterProgrammes()">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+        <option value="{{ d.id }}">{{ d.name }}</option>
         {% endfor %}
       </select>
     </div>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="activeProgrammesTable">
+      <thead class="table-light">
+        <tr>
+          <th width="45%" class="py-3">Programme Details</th>
+          <th width="40%" class="py-3">Department</th>
+          <th width="15%" class="py-3 text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in programmes if p.is_active %}
+        <tr data-dept="{{ p.department_id }}">
+          <td class="fw-medium text-dark">
+            {{ p.name }}
+            {% if p.batch %}<span class="text-muted small">({{ p.batch }})</span>{% endif %}
+            <span class="badge border border-secondary text-secondary ms-2" style="font-size: 0.7em;">{{ p.level | upper
+              }}</span>
+          </td>
+          <td><span class="badge bg-light text-dark border py-1 px-2">{{ p.department.name }}</span></td>
+          <td class="text-end">
+            <div class="d-inline-flex gap-2">
+              <a href="{{ url_for('main.programme_detail', programme_id=p.id) }}"
+                class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3">
+                <i class="bi bi-eye"></i> View
+              </a>
+              <form action="{{ url_for('main.delete_programme', programme_id=p.id) }}" method="POST" class="d-inline"
+                onsubmit="return confirm('Are you sure you want to delete this programme? This action cannot be undone.');">
+                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 px-3"
+                  title="Delete Programme">
+                  <i class="bi bi-trash"></i> Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="3" class="text-center text-muted py-5">
+            <i class="bi bi-journal-x d-block fs-2 mb-2 opacity-50"></i>
+            No active programmes found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 
-    <div class="col-md-2">
-      <button class="btn btn-primary w-100">Add</button>
+{% set inactive_programmes = programmes | selectattr('is_active', 'equalto', False) | list %}
+{% if inactive_programmes %}
+<div class="card shadow-sm border-0 mt-4">
+  <div class="card-header bg-white border-bottom p-4 d-flex justify-content-between align-items-center">
+    <div>
+      <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-archive text-danger me-2"></i>Passed Out Programmes</h5>
+      <p class="mb-0 text-muted small mt-1">Historical programmes that are no longer active in the curriculum</p>
     </div>
   </div>
-</form>
 
-<!-- Programmes Table -->
-<table class="table table-bordered">
-  <thead class="table-light">
-    <tr>
-      <th>Name</th>
-      <th>Department</th>
-      <th width="180">Actions</th>
-    </tr>
-  </thead>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" id="inactiveProgrammesTable">
+        <thead class="table-light">
+          <tr>
+            <th width="45%" class="py-3">Programme Details</th>
+            <th width="40%" class="py-3">Department</th>
+            <th width="15%" class="py-3 text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in inactive_programmes %}
+          <tr data-dept="{{ p.department_id }}">
+            <td class="fw-medium text-dark">
+              {{ p.name }}
+              {% if p.batch %}<span class="text-muted small">({{ p.batch }})</span>{% endif %}
+              <span class="badge border border-secondary text-secondary ms-2" style="font-size: 0.7em;">{{ p.level |
+                upper }}</span>
+              <span class="badge bg-danger ms-2" style="font-size: 0.7em;">PASSED OUT</span>
+            </td>
+            <td><span class="badge bg-light text-dark border py-1 px-2">{{ p.department.name }}</span></td>
+            <td class="text-end">
+              <div class="d-inline-flex gap-2">
+                <a href="{{ url_for('main.programme_detail', programme_id=p.id) }}"
+                  class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3">
+                  <i class="bi bi-eye"></i> View
+                </a>
+                <form action="{{ url_for('main.delete_programme', programme_id=p.id) }}" method="POST" class="d-inline"
+                  onsubmit="return confirm('Are you sure you want to delete this programme? This action cannot be undone.');">
+                  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                  <button type="submit"
+                    class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 px-3"
+                    title="Delete Programme">
+                    <i class="bi bi-trash"></i> Delete
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
 
-  <tbody>
-    {% for p in programmes %}
-    <tr>
-      <td>{{ p.name }}</td>
-      <td>{{ p.department.name }}</td>
-      <td class="d-flex gap-2">
-        <a
-          href="{{ url_for('main.programme_detail', programme_id=p.id) }}"
-          class="btn btn-sm btn-outline-primary"
-        >
-          View
-        </a>
+<script>
+  function filterProgrammes() {
+    var departmentId = document.getElementById('filter_department_id').value;
 
-        <form
-          method="POST"
-          action="{{ url_for('main.delete_programme', programme_id=p.id) }}"
-        >
-          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-          <button class="btn btn-sm btn-danger">Delete</button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    // Filter active programmes
+    var activeRows = document.querySelectorAll('#activeProgrammesTable tbody tr');
+    activeRows.forEach(function (row) {
+      if (!departmentId || row.getAttribute('data-dept') === departmentId) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+
+    // Filter inactive programmes
+    var inactiveRows = document.querySelectorAll('#inactiveProgrammesTable tbody tr');
+    inactiveRows.forEach(function (row) {
+      if (!departmentId || row.getAttribute('data-dept') === departmentId) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const deptSelect = document.getElementById('department_id');
+    const levelSelect = document.querySelector('select[name="level"]');
+    const copySelect = document.getElementById('copy_from_id');
+    const allOptions = Array.from(copySelect.options).slice(1);
+
+    function filterCopyOptions() {
+      const selectedDept = deptSelect.value;
+      const selectedLevel = levelSelect.value;
+      copySelect.value = '';
+
+      allOptions.forEach(opt => {
+        if (opt.getAttribute('data-dept') === selectedDept && opt.getAttribute('data-level') === selectedLevel) {
+          opt.style.display = '';
+        } else {
+          opt.style.display = 'none';
+        }
+      });
+    }
+
+    deptSelect.addEventListener('change', filterCopyOptions);
+    levelSelect.addEventListener('change', filterCopyOptions);
+
+    if (deptSelect.value) {
+      filterCopyOptions();
+    } else {
+      allOptions.forEach(opt => opt.style.display = 'none');
+    }
+  });
+</script>
 {% endblock %}

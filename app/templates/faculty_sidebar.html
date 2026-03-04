@@ -1,21 +1,10 @@
 <div class="sidebar">
-  <h5 class="sidebar-title"><i class="bi bi-person-fill-gear"></i> HOD</h5>
+  <h5 class="sidebar-title"><i class="bi bi-person-workspace"></i> Faculty</h5>
 
   <ul class="sidebar-menu">
-    <li class="{{ 'active' if request.path == '/superadmin/dashboard' else '' }}">
-      <a href="{{ url_for('main.superadmin_dashboard') }}"><i class="bi bi-building"></i> Departments</a>
-    </li>
-
-    <li class="{{ 'active' if request.path.startswith('/superadmin/faculties') else '' }}">
-      <a href="{{ url_for('main.faculty_management') }}"><i class="bi bi-people-fill"></i> Faculties</a>
-    </li>
-
-    <li class="{{ 'active' if request.path.startswith('/superadmin/programmes') else '' }}">
-      <a href="{{ url_for('main.programme_management') }}"><i class="bi bi-journal-bookmark"></i> Programmes</a>
-    </li>
 
     <li>
-      <a href="{{ url_for('courses.manage_courses') }}">
+      <a href="{{ url_for('faculty.faculty_dashboard') }}">
         <i class="bi bi-book"></i> Courses
       </a>
     </li>
@@ -27,7 +16,7 @@
     </li>
 
     <li>
-      <a href="{{ url_for('questions.manage_questions', course_id=1) }}">
+      <a href="{{ url_for('questions.manage_questions') }}">
         <i class="bi bi-question-circle"></i> Questions
       </a>
     </li>

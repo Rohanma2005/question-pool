@@ -1,0 +1,211 @@
+{% extends "layout_dashboard.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold"><i class="bi bi-file-earmark-plus text-primary me-2"></i>Generate Question Paper</h4>
+        <p class="text-muted small mb-0 mt-1">Automated generation based on Course Template and Topics.</p>
+    </div>
+</div>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div
+    class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show shadow-sm border-0">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 bg-light">
+            <div class="card-body p-4">
+                <form action="{{ url_for('generation.generation_index') }}" method="GET" class="mb-4">
+                    <label class="form-label fw-bold text-dark small"><span
+                            class="badge bg-primary rounded-pill me-1">1</span> Select Course</label>
+                    <select name="course_id" class="form-select shadow-sm" onchange="this.form.submit()">
+                        <option value="">-- Choose Course --</option>
+                        {% for c in courses %}
+                        <option value="{{ c.id }}" {{ 'selected' if selected_course_id==c.id else '' }}>
+                            [{{ c.code }}] {{ c.title }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+
+                {% if selected_course_id %}
+                {% if template_exists %}
+                <form action="{{ url_for('generation.generate_paper') }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+                    <input type="hidden" name="course_id" value="{{ selected_course_id }}">
+
+                    <div class="mb-4">
+                        <label
+                            class="form-label fw-bold text-dark small d-flex justify-content-between align-items-center">
+                            <span><span class="badge bg-primary rounded-pill me-1">2</span> Select Topics (Multiple
+                                allowed)</span>
+                        </label>
+                        <div class="border rounded p-3 bg-white shadow-sm" style="max-height: 300px; overflow-y: auto;">
+                            {% for t in topics %}
+                            <div class="form-check topic-checkbox-item mb-2 py-1">
+                                <input class="form-check-input topic-checkbox shadow-sm" type="checkbox"
+                                    name="topic_ids" value="{{ t.id }}" id="topic_{{ t.id }}"
+                                    data-co-code="{{ t.co_code }}" data-co-desc="{{ t.co_description }}">
+                                <label class="form-check-label d-block cursor-pointer" for="topic_{{ t.id }}">
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary border me-1">{{ t.code
+                                        }}</span>
+                                    <span class="text-dark fw-medium">{{ t.title }}</span>
+                                </label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                onclick="toggleSelectAll(true)"><i class="bi bi-check-all"></i> Select All</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary"
+                                onclick="toggleSelectAll(false)"><i class="bi bi-x"></i> Clear All</button>
+                        </div>
+                    </div>
+
+                    <div class="d-grid mt-4 pt-2 border-top">
+                        <button type="submit"
+                            class="btn btn-primary btn-lg shadow-sm fw-bold d-flex align-items-center justify-content-center gap-2"
+                            id="generateBtn" disabled>
+                            <i class="bi bi-lightning-charge-fill"></i> Generate Paper
+                        </button>
+                    </div>
+                </form>
+                {% else %}
+                <div
+                    class="alert alert-warning border border-warning border-opacity-25 shadow-sm mt-3 bg-warning bg-opacity-10">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-exclamation-triangle-fill fs-4 text-warning me-3 mt-1"></i>
+                        <div>
+                            <h6 class="alert-heading fw-bold mb-1 text-dark">No Template Found!</h6>
+                            <p class="mb-2 small text-muted">A <b>Course Template</b> must be created before you can
+                                generate a question paper for this course.</p>
+                            <a href="{{ url_for('templates.manage_template', course_id=selected_course_id) }}"
+                                class="btn btn-warning btn-sm fw-medium shadow-sm">
+                                <i class="bi bi-gear"></i> Create Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% else %}
+                <div class="alert alert-info border border-info border-opacity-25 shadow-sm mt-3 bg-info bg-opacity-10">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-info-circle-fill text-info me-2 fs-5"></i>
+                        <span class="small text-dark fw-medium">Please select a course to start generating a
+                            paper.</span>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7">
+        <!-- Course Outcomes Preview -->
+        <div class="card shadow-sm border-0 mb-4 d-none transition-all" id="coPreviewCard">
+            <div class="card-header bg-white border-bottom p-3 d-flex align-items-center">
+                <div class="bg-primary bg-opacity-10 text-primary p-2 rounded me-2"><i
+                        class="bi bi-list-check fs-5"></i></div>
+                <h6 class="card-title fw-bold text-dark mb-0">Selected Course Outcomes</h6>
+            </div>
+            <div class="card-body p-0">
+                <div id="coList" class="list-group list-group-flush rounded-bottom">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-light border-0 shadow-sm h-100">
+            <div class="card-body p-4 d-flex flex-column">
+                <h6 class="card-title fw-bold text-dark mb-3"><i class="bi bi-cpu me-1 text-secondary"></i> Generation
+                    Logic</h6>
+                <div class="bg-white p-3 rounded border shadow-sm flex-grow-1">
+                    <ul class="text-muted small mb-0 ps-3 space-y-2">
+                        <li class="mb-3"><strong class="text-dark">Template Validation</strong>: Ensures a valid course
+                            template exists with defined sections and rules.</li>
+                        <li class="mb-3"><strong class="text-dark">Topic Filtering</strong>: Questions are randomly
+                            pooled only from the selected <b>Topic(s)</b>.</li>
+                        <li class="mb-0"><strong class="text-dark">Course Outcomes</strong>: Associates questions with
+                            their respective COs via the selected Topics.</li>
+                    </ul>
+                </div>
+                <div class="text-center py-4 mt-auto">
+                    <i class="bi bi-file-earmark-lock2 text-black-50 opacity-25" style="font-size: 5rem;"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function updateCODisplay() {
+        const checkboxes = document.querySelectorAll('.topic-checkbox:checked');
+        const coMap = new Map();
+        const coList = document.getElementById('coList');
+        const coPreviewCard = document.getElementById('coPreviewCard');
+        const generateBtn = document.getElementById('generateBtn');
+
+        if (checkboxes.length > 0) {
+            coPreviewCard.classList.remove('d-none');
+            generateBtn.disabled = false;
+
+            checkboxes.forEach(cb => {
+                const coCode = cb.getAttribute('data-co-code');
+                const coDesc = cb.getAttribute('data-co-desc');
+                if (coCode && coCode !== 'N/A') {
+                    if (!coMap.has(coCode)) {
+                        coMap.set(coCode, coDesc);
+                    }
+                }
+            });
+
+            coList.innerHTML = '';
+            if (coMap.size === 0) {
+                coList.innerHTML = '<div class="text-muted small p-4 text-center"><i class="bi bi-folder-x fs-3 d-block mb-2 opacity-50"></i>No associated COs found for selected topics.</div>';
+            } else {
+                coMap.forEach((desc, code) => {
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item bg-transparent border-bottom px-4 py-3 border-light';
+                    item.innerHTML = `
+                        <div class="d-flex align-items-start">
+                            <span class="badge bg-dark bg-opacity-10 text-dark border me-3 mt-1">${code}</span>
+                            <span class="text-muted small lh-sm">${desc}</span>
+                        </div>
+                    `;
+                    coList.appendChild(item);
+                });
+            }
+        } else {
+            if (coPreviewCard) coPreviewCard.classList.add('d-none');
+            if (generateBtn) generateBtn.disabled = true;
+            if (coList) coList.innerHTML = '';
+        }
+    }
+
+    function toggleSelectAll(checked) {
+        document.querySelectorAll('.topic-checkbox').forEach(cb => {
+            cb.checked = checked;
+        });
+        updateCODisplay();
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const checkboxes = document.querySelectorAll('.topic-checkbox');
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateCODisplay);
+        });
+
+        updateCODisplay();
+    });
+</script>
+{% endblock %}

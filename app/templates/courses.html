@@ -2,53 +2,58 @@
 {% block title %}Courses{% endblock %}
 
 {% block content %}
-<h4 class="mb-3">Courses</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-book me-2 text-primary"></i>Course Management</h4>
+</div>
 
 <!-- Create Course -->
-<div class="card p-3 mb-4">
-  <h5 class="mb-3">Create New Course</h5>
-
+<div class="card p-4 mb-4">
+  <h6 class="fw-bold mb-3 text-muted">Create New Course</h6>
   <form method="POST">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-    <div class="row g-3">
+    <div class="row g-3 align-items-end">
       <div class="col-md-3">
-        <label class="form-label">Course Code</label>
-        <input class="form-control" name="code" placeholder="CS101" required>
-      </div>
-
-      <div class="col-md-5">
-        <label class="form-label">Course Title</label>
-        <input class="form-control" name="title" placeholder="Data Structures" required>
+        <label class="form-label small text-muted fw-semibold">Course Code</label>
+        <input class="form-control" name="code" placeholder="e.g. CS101" required>
       </div>
 
       <div class="col-md-4">
-        <label class="form-label">Home Department</label>
-       {% if is_superadmin %}
-<select name="department_id" class="form-select">
-  {% for d in departments %}
-    <option value="{{ d.id }}">{{ d.name }}</option>
-  {% endfor %}
-</select>
-{% else %}
-<input type="hidden" name="department_id" value="{{ departments[0].id }}">
-<div class="form-control bg-light">
-  {{ departments[0].name }}
-</div>
-{% endif %}
+        <label class="form-label small text-muted fw-semibold">Course Title</label>
+        <input class="form-control" name="title" placeholder="e.g. Data Structures" required>
+      </div>
+
+      <div class="col-md-3">
+        <label class="form-label small text-muted fw-semibold">Home Department</label>
+        {% if is_superadmin %}
+        <select name="department_id" class="form-select">
+          {% for d in departments %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input type="hidden" name="department_id" value="{{ departments[0].id }}">
+        <div class="form-control bg-light text-muted">
+          {{ departments[0].name }}
+        </div>
+        {% endif %}
       </div>
 
       <div class="col-md-2">
-        <button class="btn btn-primary w-100 mt-4">Create</button>
+        <button
+          class="btn btn-primary w-100 d-inline-flex align-items-center justify-content-center gap-2 shadow-sm mb-1">
+          <i class="bi bi-plus-circle"></i> Create
+        </button>
       </div>
     </div>
   </form>
 </div>
 
-<div class="card p-3 mb-3">
-  <div class="row">
-    <div class="col-md-4">
-      <label class="form-label">Filter by Department</label>
-      <select class="form-select" id="courseFilterDept">
+<!-- Course List -->
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0 text-muted">Course Directory</h6>
+    <div class="w-25">
+      <select class="form-select form-select-sm" id="courseFilterDept">
         <option value="">All Departments</option>
         {% for d in departments %}
         <option value="{{ d.id }}">{{ d.name }}</option>
@@ -56,38 +61,42 @@
       </select>
     </div>
   </div>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0" id="coursesTable">
+      <thead class="table-light">
+        <tr>
+          <th width="15%">Code</th>
+          <th width="45%">Title</th>
+          <th width="25%">Department</th>
+          <th width="15%" class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="coursesTableBody">
+        {% for c in courses %}
+        <tr>
+          <td><span class="badge bg-light border text-dark py-1 px-2">{{ c.code }}</span></td>
+          <td class="fw-medium text-dark">{{ c.title }}</td>
+          <td><span class="text-muted">{{ c.home_department.name }}</span></td>
+          <td class="text-end">
+            <a href="{{ url_for('courses.course_detail', course_id=c.id) }}"
+              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3">
+              <i class="bi bi-eye"></i> View
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="4" class="text-center text-muted py-5">
+            <i class="bi bi-book d-block fs-2 mb-2 opacity-50"></i>
+            No courses available.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
 </div>
 
-
-<!-- Course List -->
-<table class="table table-bordered" id="coursesTable">
-  <thead class="table-light">
-    <tr>
-      <th>Code</th>
-      <th>Title</th>
-      <th>Department</th>
-      <th width="180">Actions</th>
-    </tr>
-  </thead>
-  <tbody id="coursesTableBody">
-    {% for c in courses %}
-    <tr>
-      <td>{{ c.code }}</td>
-      <td>{{ c.title }}</td>
-      <td>{{ c.home_department.name }}</td>
-      <td class="d-flex gap-2">
-        <a
-          href="{{ url_for('courses.course_detail', course_id=c.id) }}"
-          class="btn btn-sm btn-outline-primary"
-        >
-          View
-        </a>
-        </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
 <script src="{{ url_for('static', filename='js/course_table_filter.js') }}"></script>
-
-
 {% endblock %}

@@ -1,0 +1,135 @@
+{% extends "layout_dashboard.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 no-print">
+    <div>
+        <h4 class="mb-0 fw-bold"><i class="bi bi-file-text text-primary me-2"></i>View Question Paper</h4>
+        <p class="text-muted small mb-0 mt-1">Preview of the generated external/internal question paper.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('generation.generation_index') }}"
+            class="btn btn-outline-secondary shadow-sm fw-medium d-inline-flex align-items-center gap-2">
+            <i class="bi bi-magic"></i> Generate Another
+        </a>
+        <button onclick="window.print()"
+            class="btn btn-primary shadow-sm fw-medium d-inline-flex align-items-center gap-2">
+            <i class="bi bi-printer"></i> Print Paper
+        </button>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 bg-light p-4 no-print mb-4">
+    <div class="d-flex justify-content-center">
+        <div class="text-muted small"><i class="bi bi-info-circle me-1"></i> The preview below shows how the document
+            will appear on an A4 page.</div>
+    </div>
+</div>
+
+<div class="paper-container mx-auto bg-white p-5 shadow border" id="printableArea"
+    style="max-width: 210mm; min-height: 297mm;">
+    <div class="text-center mb-5 pb-3 border-bottom border-dark border-2">
+        <h3 class="fw-bold mb-2 text-uppercase font-serif" style="letter-spacing: 1px;">INTERNAL EXAMINATION QUESTION
+            PAPER</h3>
+        <h5 class="fw-bold mb-3 font-serif">{{ course.title }} ({{ course.code }})</h5>
+        <div class="d-flex justify-content-between mt-4 px-2 fw-medium font-serif">
+            <span>Duration: {{ paper.duration_minutes }} Minutes</span>
+            <span>Max Marks: {{ paper.total_marks }}</span>
+        </div>
+    </div>
+
+    {% for label, questions in sections.items() %}
+    <div class="mb-5">
+        <div class="d-flex justify-content-center align-items-center mb-4">
+            <h5 class="fw-bold mb-0 border-bottom border-dark border-2 pb-1 text-uppercase font-serif">SECTION {{ label
+                }}</h5>
+        </div>
+
+        <div class="text-center mb-4">
+            {% if section_meta[label] and section_meta[label].total > section_meta[label].required %}
+            <span class="fst-italic fw-medium font-serif">
+                Answer any {{ section_meta[label].required }} out of {{ section_meta[label].total }} questions
+            </span>
+            {% elif section_meta[label] %}
+            <span class="fst-italic fw-medium font-serif">
+                Answer all {{ section_meta[label].required }} questions
+            </span>
+            {% endif %}
+            <div class="small fw-bold mt-1 font-serif">(Each question carries {{ section_meta[label].mark_per_question
+                }} marks)</div>
+        </div>
+
+        {% for q in questions %}
+        <div class="mb-4 d-flex justify-content-between align-items-start font-serif"
+            style="font-size: 1.1rem; line-height: 1.6;">
+            <div class="pe-4" style="flex: 1;">
+                <div class="d-flex gap-2">
+                    <span class="fw-bold">{{ loop.index }}.</span>
+                    <div>
+                        <p class="mb-2 text-justify">{{ q.text }}</p>
+
+                        {% if q.question_type == 'mcq' and q.options %}
+                        <div class="row mt-3 mb-2">
+                            {% for opt in q.options %}
+                            <div class="col-6 mb-2">({{ "abcd"[loop.index0] }}) {{ opt }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-2 text-muted small fst-italic no-print border-top pt-1 d-inline-block">
+                            [CO: {{ q.co_satisfied }} | Bloom: {{ q.bloom_level }}]
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="fw-bold text-nowrap mt-1">[{{ q.mark_value }}]</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="text-center mt-5 pt-4 border-top text-muted small fst-italic no-print">
+        <p>This paper was generated automatically on {{ paper.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+</div>
+
+<style>
+    .font-serif {
+        font-family: "Times New Roman", Times, serif;
+    }
+
+    .text-justify {
+        text-align: justify;
+    }
+
+    @media print {
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        .no-print {
+            display: none !important;
+        }
+
+        body {
+            background: white !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        #printableArea {
+            box-shadow: none !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        /* Ensure font-serif prints well */
+        .font-serif {
+            font-family: "Times New Roman", Times, serif !important;
+        }
+    }
+</style>
+{% endblock %}

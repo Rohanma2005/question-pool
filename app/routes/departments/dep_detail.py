@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, flash, Blueprint
+from flask import render_template, request, redirect, url_for, flash, Blueprint,session
 from app.extensions import db
 from app.models import Department, Faculty
 from app.utils.auth import admin_or_hod_required
@@ -15,6 +15,7 @@ departments_bp = Blueprint(
 @admin_or_hod_required
 def department_detail(dept_id):
     department = Department.query.get_or_404(dept_id)
+    is_superadmin = (session.get('role') == 'super_admin')
 
     if request.method == 'POST':
         new_hod_id = request.form.get('hod_id', type=int)
@@ -41,5 +42,6 @@ def department_detail(dept_id):
     return render_template(
         'department_detail.html',
         department=department,
-        faculties=faculties
+        faculties=faculties,
+        is_superadmin=is_superadmin
     )

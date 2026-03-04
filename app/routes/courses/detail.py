@@ -43,6 +43,7 @@ def course_detail(course_id):
         if form_type == 'add_co':
             co_code = request.form.get('co_code', '').strip()
             co_description = request.form.get('co_description', '').strip()
+            bloom_level = request.form.get('bloom_level', 'Understand').strip()
 
             if not co_code or not co_description:
                 flash('CO code and description are required', 'error')
@@ -66,7 +67,8 @@ def course_detail(course_id):
                     code=co_code,
                     description=co_description,
                     course_id=course.id,
-                    learning_domains=selected_domains
+                    learning_domains=selected_domains,
+                    bloom_level=bloom_level
                 )
 
                 db.session.add(co)
@@ -173,6 +175,7 @@ def edit_course_outcome(co_id):
     new_code = request.form.get('co_code', '').strip()
     new_description = request.form.get('co_description', '').strip()
     new_domains = request.form.getlist('learning_domains')
+    new_bloom = request.form.get('bloom_level', 'Understand').strip()
 
     if not new_code or not new_description or not new_domains:
         flash('CO code, description, and at least one learning domain are required', 'error')
@@ -192,6 +195,7 @@ def edit_course_outcome(co_id):
     co.code = new_code
     co.description = new_description
     co.learning_domains = new_domains
+    co.bloom_level = new_bloom
 
     db.session.commit()
 

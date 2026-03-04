@@ -2,34 +2,53 @@
 {% block title %}Departments{% endblock %}
 
 {% block content %}
-<h4 class="mb-3">Departments</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-building me-2 text-primary"></i>Departments</h4>
+</div>
 
-<form method="POST" class="mb-4">
-  <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-  <div class="input-group">
-    <input class="form-control" name="dept_name" placeholder="Department name">
-    <button class="btn btn-primary">Add</button>
+<div class="card p-4">
+  <form method="POST" class="mb-4">
+    <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+    <div class="input-group">
+      <input class="form-control form-control-lg fs-6" name="dept_name" placeholder="Enter new department name..."
+        required>
+      <button class="btn btn-primary d-flex align-items-center gap-2 px-4 shadow-sm">
+        <i class="bi bi-plus-circle"></i> Add Department
+      </button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th width="10%">ID</th>
+          <th width="70%">Name</th>
+          <th width="20%" class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dept in departments %}
+        <tr>
+          <td><span class="text-muted fw-semibold">#{{ dept.id }}</span></td>
+          <td class="fw-medium text-dark">{{ dept.name }}</td>
+          <td class="text-end">
+            <a href="{{ url_for('departments.department_detail', dept_id=dept.id) }}"
+              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3">
+              <i class="bi bi-eye"></i> View
+            </a>
+          </td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="3" class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+            No departments found.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </div>
-</form>
-
-<table class="table table-bordered">
-  <thead class="table-light">
-    <tr><th>ID</th><th>Name</th><th>Action</th></tr>
-  </thead>
-  <tbody>
-    {% for dept in departments %}
-    <tr>
-      <td>{{ dept.id }}</td>
-      <td>{{ dept.name }}</td>
-     <td>
-  <a href="{{ url_for('departments.department_detail', dept_id=dept.id) }}"
-     class="btn btn-sm btn-outline-primary">
-     View
-  </a>
-</td>
-
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+</div>
 {% endblock %}

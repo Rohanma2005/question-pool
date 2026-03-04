@@ -3,11 +3,38 @@ from functools import wraps
 import secrets
 from ..models import Faculty
 
+def initialize_user_session(user_id, role):
+    """
+    Initialize a fresh user session with proper isolation.
+    Should be called after successful authentication.
+    """
+    # Clear any old session data first
+    session.clear()
+    
+    # Set new user data
+    session['user_id'] = user_id
+    session['role'] = role
+    
+    # Generate new CSRF token for this session
+    session['csrf_token'] = secrets.token_hex(32)
+    
+    # Make session permanent
+    session.permanent = True
+
 def login_required(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if 'user_id' not in session:
             flash('You need to login first', 'error')
+            return redirect(url_for('main.login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def super_admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'user_id' not in session or session.get('role') != 'super_admin':
+            flash('Access denied', 'error')
             return redirect(url_for('main.login'))
         return f(*args, **kwargs)
     return decorated_function

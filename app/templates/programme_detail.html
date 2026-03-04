@@ -4,122 +4,155 @@
 {% block content %}
 <script src="{{ url_for('static', filename='js/course_filter.js') }}"></script>
 
-
-<h4 class="mb-3">Programme Details</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    {% if not programme.is_active %}
+    <span class="badge bg-danger rounded-pill px-3 py-2 me-3 fs-6"><i class="bi bi-exclamation-triangle me-1"></i>
+      PASSED OUT</span>
+    {% endif %}
+    <form action="{{ url_for('main.toggle_programme_status', programme_id=programme.id) }}" method="POST"
+      class="d-inline border-end pe-3 me-2"
+      onsubmit="return confirm('{% if programme.is_active %}Are you sure you want to mark this programme as Passed Out?{% else %}Are you sure you want to reactivate this programme?{% endif %}');">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <button type="submit"
+        class="btn btn-{% if programme.is_active %}warning{% else %}success{% endif %} btn-sm d-inline-flex align-items-center gap-1">
+        <i class="bi bi-{% if programme.is_active %}archive{% else %}arrow-counterclockwise{% endif %}"></i>
+        {% if programme.is_active %}Mark as Passed Out{% else %}Reactivate Programme{% endif %}
+      </button>
+    </form>
+    <a href="{{ url_for('main.programme_management') }}"
+      class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+      <i class="bi bi-arrow-left"></i> Back
+    </a>
+  </div>
+</div>
 
 <!-- Programme Info -->
-<div class="card p-3 mb-4">
-  <p class="mb-1"><strong>Name:</strong> {{ programme.name }}</p>
-  <p class="mb-0">
-    <strong>Department:</strong> {{ programme.department.name }}
-  </p>
+<div class="card p-4 mb-4 border-primary border-opacity-25 bg-light">
+  <div class="d-flex align-items-center gap-3">
+    <div class="bg-white p-3 rounded-3 shadow-sm text-primary border">
+      <i class="bi bi-mortarboard-fill fs-3"></i>
+    </div>
+    <div>
+      <h5 class="fw-bold mb-1 text-dark">{{ programme.name }}</h5>
+      <p class="mb-0 text-muted"><i class="bi bi-building me-1"></i> Department: <span class="fw-medium text-dark">{{
+          programme.department.name }}</span></p>
+    </div>
+  </div>
 </div>
 
 <!-- Semester Tabs -->
-<ul class="nav nav-tabs mb-3">
-  {% for sem in range(1, 9) %}
+<div class="card px-4 pt-4 pb-0 mb-4 shadow-sm"
+  style="border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: none;">
+  <ul class="nav nav-tabs border-bottom-0 pb-1">
+    {% for sem in range(1, max_semesters + 1) %}
     <li class="nav-item">
-      <a
-        class="nav-link {% if sem == semester_no %}active{% endif %}"
-        href="{{ url_for('main.programme_detail',
-                         programme_id=programme.id,
-                         semester=sem) }}"
-      >
+      <a class="nav-link {% if sem == semester_no %}active fw-bold text-primary border-bottom-0 shadow-sm bg-white rounded-top-3{% else %}text-muted border-0{% endif %} px-4 py-3"
+        href="{{ url_for('main.programme_detail', programme_id=programme.id, semester=sem) }}">
         Semester {{ sem }}
       </a>
     </li>
-  {% endfor %}
-</ul>
-
+    {% endfor %}
+  </ul>
+</div>
 
 <!-- Add Course to Semester -->
-<div class="card p-3 mb-4">
-  <h5 class="mb-3">Add Course to Semester {{ semester_no }}</h5>
+<div class="card p-4 mb-4 shadow-sm bg-light"
+  style="border-top-left-radius: 0; border-top-right-radius: 0; margin-top: -30px; border-top: 1px solid #dee2e6;">
+  <h6 class="fw-bold mb-3 text-muted"><i class="bi bi-plus-circle me-1"></i> Add Course to Semester {{ semester_no }}
+  </h6>
 
   <form method="POST">
     <div class="row g-3">
-
       <!-- Department -->
       <div class="col-md-4">
-        <label class="form-label">Department</label>
-        <select
-  class="form-select"
-  id="departmentSelect"
-  required
->
-  <option value="">Select department</option>
-  {% for d in departments %}
-    <option value="{{ d.id }}">{{ d.name }}</option>
-  {% endfor %}
-</select>
-
+        <label class="form-label small text-muted fw-semibold">Department</label>
+        <select class="form-select" id="departmentSelect" required>
+          <option value="">Select department</option>
+          {% for d in departments %}
+          <option value="{{ d.id }}">{{ d.name }}</option>
+          {% endfor %}
+        </select>
       </div>
 
       <!-- Course -->
       <div class="col-md-4">
-        <label class="form-label">Course</label>
-        <select
-          class="form-select"
-          name="course_id"
-          id="courseSelect"
-          required
-          disabled
-        >
+        <label class="form-label small text-muted fw-semibold">Course</label>
+        <select class="form-select" name="course_id" id="courseSelect" required disabled>
           <option value="">Select course</option>
         </select>
       </div>
 
       <!-- Faculty -->
-      <div class="col-md-4">
-        <label class="form-label">Faculty</label>
-        <select class="form-select" name="faculty_id" required>
+      <div class="col-md-3">
+        <label class="form-label small text-muted fw-semibold">Faculty (Optional)</label>
+        <select class="form-select" name="faculty_id">
           <option value="">Select faculty</option>
           {% for f in faculties %}
-            <option value="{{ f.id }}">{{ f.name }}</option>
+          <option value="{{ f.id }}">{{ f.name }}</option>
           {% endfor %}
         </select>
       </div>
 
-      <div class="col-md-2 d-flex align-items-end">
-        <button class="btn btn-primary w-100">Add</button>
+      <div class="col-md-1 d-flex align-items-end">
+        <button class="btn btn-primary w-100 d-inline-flex justify-content-center align-items-center shadow-sm"
+          title="Add Course" {% if not programme.is_active %}disabled{% endif %}><i class="bi bi-plus-lg"></i></button>
       </div>
-
     </div>
   </form>
 </div>
 
-
-
-
 <!-- Course Offerings Table -->
- <!-- Course Offerings Table -->
-<div class="card p-3">
-  <h5 class="mb-3">Semester {{ semester_no }} Courses</h5>
+<div class="card p-4 shadow-sm">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="fw-bold mb-0 text-muted"><i class="bi bi-list-ul me-1"></i> Semester {{ semester_no }} Curriculum</h6>
+    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-3 py-2">Sem {{
+      semester_no }}</span>
+  </div>
 
   {% if offerings %}
-    <table class="table table-bordered">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th>Course Code</th>
-          <th>Course Title</th>
-          <th>Faculty</th>
+          <th width="15%">Course Code</th>
+          <th width="40%">Course Title</th>
+          <th width="45%">Assign Faculty</th>
         </tr>
       </thead>
       <tbody>
         {% for offering in offerings %}
-          <tr>
-            <td>{{ offering.course.code }}</td>
-            <td>{{ offering.course.title }}</td>
-            <td>{{ offering.faculty.name }}</td>
-          </tr>
+        <tr>
+          <td><span class="badge bg-light text-dark border py-1 px-2">{{ offering.course.code }}</span></td>
+          <td class="fw-medium text-dark">{{ offering.course.title }}</td>
+          <td>
+            <form action="{{ url_for('main.update_offering_faculty', offering_id=offering.id) }}" method="POST"
+              class="m-0">
+              <div class="input-group input-group-sm w-75">
+                <span class="input-group-text bg-light text-muted"><i class="bi bi-person"></i></span>
+                <select name="faculty_id" class="form-select form-select-sm" onchange="this.form.submit()" {% if not
+                  programme.is_active %}disabled{% endif %}>
+                  <option value="">-- Not Assigned --</option>
+                  {% for f in faculties %}
+                  <option value="{{ f.id }}" {% if offering.faculty_id==f.id %}selected{% endif %}>
+                    {{ f.name }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </form>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+  </div>
   {% else %}
-    <div class="alert alert-secondary mb-0">
-      No courses assigned for this semester.
-    </div>
+  <div class="text-center text-muted py-5 border rounded-3 bg-light mt-2">
+    <i class="bi bi-inbox d-block fs-2 mb-2 opacity-50"></i>
+    <h6 class="fw-medium text-dark mb-1">No Courses Assigned</h6>
+    <p class="mb-0 small">There are currently no courses assigned to this semester.</p>
+  </div>
   {% endif %}
 </div>
-
 {% endblock %}

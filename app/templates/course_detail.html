@@ -1,40 +1,57 @@
-{% extends layout_template %}
+{% extends "layout_dashboard.html" %}
 
 {% block title %}Course Detail{% endblock %}
 
 {% block content %}
-
-<h4 class="mb-3">
-  {{ course.code }} — {{ course.title }}
-</h4>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-journal-code me-2 text-primary"></i>{{ course.code }} — {{ course.title }}
+  </h4>
+  <a href="{{ url_for('courses.manage_courses') }}"
+    class="btn btn-outline-secondary btn-sm d-inline-flex align-items-center gap-1">
+    <i class="bi bi-arrow-left"></i> Back
+  </a>
+</div>
 
 <!-- ===============================
      Template Management
 ================================ -->
-<div class="card p-3 mb-4">
-  <h5 class="mb-3">Template Management</h5>
-  <a href="{{ url_for('templates.manage_template', course_id=course.id) }}" class="btn btn-primary">
-    Manage Template
-  </a>
+<div class="card p-4 mb-4 border-primary border-opacity-25 bg-light">
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-layout-text-window-reverse me-1 text-primary"></i> Course
+        Question Template</h6>
+      <p class="mb-0 text-muted small">Manage the structure and sections of the question paper for this course.</p>
+    </div>
+    <a href="{{ url_for('templates.manage_template', course_id=course.id) }}"
+      class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm">
+      <i class="bi bi-gear"></i> Manage Template
+    </a>
+  </div>
 </div>
 
 <!-- ===============================
      Assigned Faculties
 ================================ -->
 {% if is_superadmin %}
-<div class="card p-3 mb-4">
-  <h5>Assigned Faculties</h5>
+<div class="card p-4 mb-4">
+  <h6 class="fw-bold mb-3 text-muted"><i class="bi bi-person-workspace me-1"></i> Assigned Faculties</h6>
 
   {% if assigned_faculties %}
-    <ul>
-      {% for f in assigned_faculties %}
-        <li>{{ f.name }} ({{ f.email }})</li>
-      {% endfor %}
-    </ul>
+  <div class="d-flex flex-wrap gap-2">
+    {% for f in assigned_faculties %}
+    <span class="badge bg-light text-dark border px-3 py-2 d-inline-flex align-items-center gap-2">
+      <i class="bi bi-person-circle text-primary fs-5"></i>
+      <span>
+        <span class="fw-semibold d-block text-start">{{ f.name }}</span>
+        <span class="fw-normal text-muted small d-block text-start" style="font-size: 0.75rem;">{{ f.email }}</span>
+      </span>
+    </span>
+    {% endfor %}
+  </div>
   {% else %}
-    <div class="alert alert-secondary mb-0">
-      No faculty currently assigned.
-    </div>
+  <div class="alert alert-secondary bg-light border-0 mb-0 d-inline-block text-muted">
+    <i class="bi bi-info-circle me-1"></i> No faculty currently assigned to this course.
+  </div>
   {% endif %}
 </div>
 {% endif %}
@@ -42,344 +59,310 @@
 <!-- ===============================
      Course Outcomes
 ================================ -->
-<div class="card p-3 mb-4">
-  <h5>Course Outcomes</h5>
+<div class="card p-4 mb-4 shadow-sm">
+  <h6 class="fw-bold mb-3 text-muted"><i class="bi bi-list-check me-1"></i> Course Outcomes (COs)</h6>
 
   <!-- Add CO Form -->
-  <form method="POST" class="mb-3">
+  <form method="POST" class="mb-4 bg-light p-3 rounded-3 border">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
     <input type="hidden" name="form_type" value="add_co">
+    <h6 class="fw-semibold small text-muted mb-2">Add New CO</h6>
 
-
-    <div class="row g-3">
+    <div class="row g-2 align-items-end">
       <div class="col-md-2">
-        <input class="form-control" name="co_code" placeholder="CO1" required>
+        <input class="form-control" name="co_code" placeholder="Code (e.g. CO1)" required>
       </div>
-      <div class="col-md-8">
-        <input class="form-control" name="co_description"
-               placeholder="Describe the course outcome"
-               required>
+      <div class="col-md-4">
+        <input class="form-control" name="co_description" placeholder="Outcome description" required>
       </div>
-      <div class="col-md-3">
-  <label class="form-label">Learning Domains</label>
-  <div class="dropdown">
-    <button class="btn btn-outline-secondary dropdown-toggle w-100"
-            type="button"
+      <div class="col-md-2">
+        <select class="form-select" name="bloom_level" required>
+          <option value="Remember">Remember (K)</option>
+          <option value="Understand" selected>Understand (U)</option>
+          <option value="Apply">Apply (A)</option>
+          <option value="Analyse">Analyse (An)</option>
+          <option value="Evaluate">Evaluate (E)</option>
+          <option value="Create">Create (C)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle w-100 bg-white" type="button"
             data-bs-toggle="dropdown">
-      Select Domains
-    </button>
-    <div class="dropdown-menu p-3" style="max-height:250px; overflow:auto;">
-      {% for code, name in learning_domains.items() %}
-        <div class="form-check">
-          <input class="form-check-input"
-                 type="checkbox"
-                 name="learning_domains"
-                 value="{{ code }}"
-                 id="domain_{{ code }}">
-          <label class="form-check-label"
-                 for="domain_{{ code }}">
-            {{ name }} ({{ code }})
-          </label>
+            Domains
+          </button>
+          <div class="dropdown-menu p-3 dropdown-menu-persist shadow-sm" style="max-height:250px; overflow:auto;">
+            {% for code, name in learning_domains.items() %}
+            <div class="form-check mb-1">
+              <input class="form-check-input" type="checkbox" name="learning_domains" value="{{ code }}"
+                id="domain_add_{{ code }}">
+              <label class="form-check-label small" for="domain_add_{{ code }}">
+                <span class="fw-medium">{{ code }}</span>: <span class="text-muted">{{ name }}</span>
+              </label>
+            </div>
+            {% endfor %}
+          </div>
         </div>
-      {% endfor %}
-    </div>
-  </div>
-</div>
-
+      </div>
       <div class="col-md-2">
-        <button class="btn btn-primary w-100">Add CO</button>
+        <button class="btn btn-primary w-100 d-inline-flex justify-content-center align-items-center gap-1 shadow-sm"><i
+            class="bi bi-plus-lg"></i> Add CO</button>
       </div>
     </div>
   </form>
 
   <!-- CO List -->
   {% if course_outcomes %}
-    <table class="table table-bordered">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
-  <tr>
-    <th>Code</th>
-    <th>Description</th>
-    <th width="120">Domains</th>
-
-    <th width="180">Action</th>
-  </tr>
-</thead>
-
+        <tr>
+          <th width="10%">Code</th>
+          <th width="40%">Description</th>
+          <th width="15%">Bloom Level</th>
+          <th width="20%">Domains</th>
+          <th width="15%" class="text-end">Action</th>
+        </tr>
+      </thead>
       <tbody>
-  {% for co in course_outcomes %}
-    <tr>
-      <td>{{ co.code }}</td>
-      <td>{{ co.description }}</td>
-      <td>
-  {% if co.learning_domains %}
-    {{ co.learning_domains | join(', ') }}
-  {% else %}
-    -
-  {% endif %}
-</td>
-
-      <td>
-        <button
-          class="btn btn-sm btn-outline-primary"
-          onclick="toggleEditForm({{ co.id }})"
-        >
-          Edit
-        </button>
-      </td>
-    </tr>
-
-    <!-- Hidden Edit Row -->
-    <tr id="edit-row-{{ co.id }}" style="display:none;">
-      <td colspan="3">
-        <form
-          method="POST"
-          action="{{ url_for('courses.edit_course_outcome', co_id=co.id) }}"
-          class="row g-2"
-        >
-          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-
-          <div class="col-md-2">
-            <input
-              class="form-control"
-              name="co_code"
-              value="{{ co.code }}"
-              required
-            >
-          </div>
-
-          <div class="col-md-7">
-            <input
-              class="form-control"
-              name="co_description"
-              value="{{ co.description }}"
-              required
-            >
-          </div>
-          <div class="col-md-3">
-  {% for code, name in learning_domains.items() %}
-    <div class="form-check">
-      <input class="form-check-input"
-             type="checkbox"
-             name="learning_domains"
-             value="{{ code }}"
-             {% if co.learning_domains and code in co.learning_domains %}checked{% endif %}>
-      <label class="form-check-label">
-        {{ name }} ({{ code }})
-      </label>
-    </div>
-  {% endfor %}
-</div>
-
-
-          <div class="col-md-3">
-            <button class="btn btn-success btn-sm">Save</button>
-            <button
-              type="button"
-              class="btn btn-secondary btn-sm"
-              onclick="toggleEditForm({{ co.id }})"
-            >
-              Cancel
+        {% for co in course_outcomes %}
+        <tr>
+          <td><span
+              class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-1 px-2">{{
+              co.code }}</span></td>
+          <td class="fw-medium text-dark">{{ co.description }}</td>
+          <td><span class="badge bg-light text-dark border">{{ co.bloom_level }}</span></td>
+          <td>
+            {% if co.learning_domains %}
+            <div class="d-flex gap-1 flex-wrap">
+              {% for d in co.learning_domains %}
+              <span class="badge bg-secondary bg-opacity-10 text-secondary border px-1" title="{{ d }}">{{ d }}</span>
+              {% endfor %}
+            </div>
+            {% else %}
+            <span class="text-muted small">-</span>
+            {% endif %}
+          </td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-2"
+              onclick="toggleEditForm({{ co.id }})">
+              <i class="bi bi-pencil-square"></i> Edit
             </button>
-          </div>
-        </form>
-      </td>
-    </tr>
-  {% endfor %}
-</tbody>
+          </td>
+        </tr>
 
+        <!-- Hidden Edit Row -->
+        <tr id="edit-row-{{ co.id }}" style="display:none;" class="bg-light">
+          <td colspan="5" class="p-3">
+            <form method="POST" action="{{ url_for('courses.edit_course_outcome', co_id=co.id) }}"
+              class="row g-2 m-0 p-3 bg-white border rounded shadow-sm">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Code</label>
+                <input class="form-control form-control-sm" name="co_code" value="{{ co.code }}" required>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Description</label>
+                <input class="form-control form-control-sm" name="co_description" value="{{ co.description }}" required>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Bloom Level</label>
+                <select class="form-select form-select-sm" name="bloom_level" required>
+                  <option value="Remember" {% if co.bloom_level=='Remember' %}selected{% endif %}>Remember (K)</option>
+                  <option value="Understand" {% if co.bloom_level=='Understand' %}selected{% endif %}>Understand (U)
+                  </option>
+                  <option value="Apply" {% if co.bloom_level=='Apply' %}selected{% endif %}>Apply (A)</option>
+                  <option value="Analyse" {% if co.bloom_level=='Analyse' %}selected{% endif %}>Analyse (An)</option>
+                  <option value="Evaluate" {% if co.bloom_level=='Evaluate' %}selected{% endif %}>Evaluate (E)</option>
+                  <option value="Create" {% if co.bloom_level=='Create' %}selected{% endif %}>Create (C)</option>
+                </select>
+              </div>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Domains</label>
+                <div class="dropdown">
+                  <button class="btn btn-outline-secondary btn-sm dropdown-toggle w-100 bg-light text-start"
+                    type="button" data-bs-toggle="dropdown">
+                    Select...
+                  </button>
+                  <div class="dropdown-menu p-2 dropdown-menu-persist shadow text-muted"
+                    style="max-height:200px; overflow:auto;">
+                    {% for code, name in learning_domains.items() %}
+                    <div class="form-check mb-1">
+                      <input class="form-check-input" type="checkbox" name="learning_domains" value="{{ code }}"
+                        id="domain_edit_{{ co.id }}_{{ code }}" {% if co.learning_domains and code in
+                        co.learning_domains %}checked{% endif %}>
+                      <label class="form-check-label small" for="domain_edit_{{ co.id }}_{{ code }}">
+                        <span class="fw-semibold">{{ code }}</span>
+                      </label>
+                    </div>
+                    {% endfor %}
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-3 d-flex align-items-end gap-2">
+                <button
+                  class="btn btn-outline-success btn-sm w-50 d-inline-flex justify-content-center align-items-center gap-1"><i
+                    class="bi bi-check-lg"></i> Save</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-50"
+                  onclick="toggleEditForm({{ co.id }})">Cancel</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
     </table>
+  </div>
   {% else %}
-    <div class="alert alert-secondary">
-      No course outcomes added yet.
-    </div>
+  <div class="text-center text-muted py-4 border rounded-3 bg-light">
+    <i class="bi bi-list-check d-block fs-3 mb-2 opacity-50"></i>
+    <p class="mb-0 small">No course outcomes defined.</p>
+  </div>
   {% endif %}
 </div>
 
 <!-- ===============================
      Topics
 ================================ -->
+<div class="card p-4 shadow-sm">
+  <h6 class="fw-bold mb-3 text-muted"><i class="bi bi-journal-plus me-1"></i> Topics & Syllabus</h6>
 
-
-<div class="card p-3 mb-4">
-  <h5>Add Topic</h5>
-
-  <form method="POST">
+  <form method="POST" class="mb-4 bg-light p-3 rounded-3 border">
     <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
     <input type="hidden" name="form_type" value="add_topic">
+    <h6 class="fw-semibold small text-muted mb-2">Add New Topic</h6>
 
-    <div class="row g-3">
-
+    <div class="row g-2 align-items-end">
       <!-- Topic Code -->
       <div class="col-md-2">
-        <label class="form-label">Topic ID</label>
-        <input
-          class="form-control"
-          name="topic_code"
-          placeholder="1.1"
-          required
-        >
+        <label class="form-label small text-muted fw-semibold mb-1">Topic ID</label>
+        <input class="form-control" name="topic_code" placeholder="e.g. 1.1" required>
       </div>
 
       <!-- CO Selection -->
-      <div class="col-md-3">
-        <label class="form-label">Course Outcome</label>
+      <div class="col-md-2">
+        <label class="form-label small text-muted fw-semibold mb-1">CO</label>
         <select class="form-select" name="co_id" required>
-          <option value="">Select CO</option>
+          <option value="">--</option>
           {% for co in course_outcomes %}
-            <option value="{{ co.id }}">
-              {{ co.code }}
-            </option>
+          <option value="{{ co.id }}">{{ co.code }}</option>
           {% endfor %}
         </select>
       </div>
 
       <!-- Topic Description -->
-      <div class="col-md-7">
-        <label class="form-label">Topic Description</label>
-        <textarea
-          class="form-control"
-          name="topic_title"
-          rows="3"
-          placeholder="Enter detailed topic description..."
-          required
-        ></textarea>
+      <div class="col-md-6">
+        <label class="form-label small text-muted fw-semibold mb-1">Title / Description</label>
+        <input class="form-control" name="topic_title" placeholder="Topic description..." required>
       </div>
 
       <div class="col-md-2">
-        <button class="btn btn-primary w-100">
-          Add Topic
-        </button>
+        <button class="btn btn-primary w-100 d-inline-flex justify-content-center align-items-center gap-1 shadow-sm"><i
+            class="bi bi-plus-lg"></i> Add Topic</button>
       </div>
-
     </div>
   </form>
-</div>
 
-
-<!-- ===============================
-     Topics Table
-================================ -->
-<div class="card p-3">
-  <h5>Topics</h5>
-
+  <!-- Topics Table -->
   {% if topics %}
-    <table class="table table-bordered table-striped">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
       <thead class="table-light">
         <tr>
-          <th width="100">Topic ID</th>
-          <th>Description</th>
-          <th width="100">CO</th>
-          <th width="120">Action</th>
+          <th width="15%">Topic ID</th>
+          <th width="55%">Description</th>
+          <th width="15%">Course Outcome</th>
+          <th width="15%" class="text-end">Action</th>
         </tr>
       </thead>
-
       <tbody>
         {% for t in topics %}
-          <tr>
-            <td>{{ t.code }}</td>
+        <tr>
+          <td><span class="badge bg-light text-dark border px-2 py-1"><i class="bi bi-hash text-muted"></i> {{ t.code
+              }}</span></td>
+          <td class="fw-medium text-dark">{{ t.title }}</td>
+          <td><span class="badge bg-info bg-opacity-10 text-primary border border-info border-opacity-25">{{ t.co.code
+              }}</span></td>
+          <td class="text-end">
+            <button
+              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center justify-content-center px-3 gap-1"
+              onclick="toggleTopicEdit({{ t.id }})">
+              <i class="bi bi-pencil-square"></i> Edit
+            </button>
+          </td>
+        </tr>
 
-            <td style="white-space: pre-line;">
-              {{ t.title }}
-            </td>
+        <!-- Hidden Edit Row -->
+        <tr id="edit-topic-{{ t.id }}" style="display:none;" class="bg-light">
+          <td colspan="4" class="p-3">
+            <form method="POST" action="{{ url_for('courses.edit_topic', topic_id=t.id) }}"
+              class="row g-2 m-0 p-3 bg-white border rounded shadow-sm">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
-            <td>{{ t.co.code }}</td>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Topic ID</label>
+                <input class="form-control form-control-sm" name="topic_code" value="{{ t.code }}" required>
+              </div>
 
-            <td>
-              <button
-                class="btn btn-sm btn-outline-primary"
-                onclick="toggleTopicEdit({{ t.id }})"
-              >
-                Edit
-              </button>
-            </td>
-          </tr>
+              <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">CO</label>
+                <select class="form-select form-select-sm" name="co_id" required>
+                  {% for co in course_outcomes %}
+                  <option value="{{ co.id }}" {% if co.id==t.co_id %}selected{% endif %}>
+                    {{ co.code }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
 
-          <!-- Hidden Edit Row -->
-          <tr id="edit-topic-{{ t.id }}" style="display:none;">
-            <td colspan="4">
-              <form
-                method="POST"
-                action="{{ url_for('courses.edit_topic', topic_id=t.id) }}"
-                class="row g-2"
-              >
-                <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <div class="col-md-5">
+                <label class="form-label small text-muted mb-1">Description</label>
+                <input class="form-control form-control-sm" name="topic_title" value="{{ t.title }}" required>
+              </div>
 
-                <div class="col-md-2">
-                  <input
-                    class="form-control"
-                    name="topic_code"
-                    value="{{ t.code }}"
-                    required
-                  >
-                </div>
-
-                <div class="col-md-3">
-                  <select class="form-select" name="co_id" required>
-                    {% for co in course_outcomes %}
-                      <option
-                        value="{{ co.id }}"
-                        {% if co.id == t.co_id %}selected{% endif %}
-                      >
-                        {{ co.code }}
-                      </option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-                <div class="col-md-5">
-                  <textarea
-                    class="form-control"
-                    name="topic_title"
-                    rows="3"
-                    required
-                  >{{ t.title }}</textarea>
-                </div>
-
-                <div class="col-md-2">
-                  <button class="btn btn-success btn-sm">Save</button>
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    onclick="toggleTopicEdit({{ t.id }})"
-                  >
-                    Cancel
-                  </button>
-                </div>
-
-              </form>
-            </td>
-          </tr>
-
+              <div class="col-md-3 d-flex align-items-end gap-2">
+                <button
+                  class="btn btn-outline-success btn-sm w-50 d-inline-flex justify-content-center align-items-center gap-1"><i
+                    class="bi bi-check-lg"></i> Save</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm w-50"
+                  onclick="toggleTopicEdit({{ t.id }})">Cancel</button>
+              </div>
+            </form>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+  </div>
   {% else %}
-    <div class="alert alert-secondary">
-      No topics added yet.
-    </div>
+  <div class="text-center text-muted py-4 border rounded-3 bg-light">
+    <i class="bi bi-journal-text d-block fs-3 mb-2 opacity-50"></i>
+    <p class="mb-0 small">No topics added to syllabus yet.</p>
+  </div>
   {% endif %}
 </div>
 
-
-
-
 <script>
-function toggleEditForm(coId) {
-  const row = document.getElementById(`edit-row-${coId}`)
-  if (!row) return
+  function toggleEditForm(coId) {
+    const row = document.getElementById(`edit-row-${coId}`);
+    if (!row) return;
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+  }
 
-  row.style.display = row.style.display === 'none' ? '' : 'none'
-}
+  function toggleTopicEdit(id) {
+    const row = document.getElementById(`edit-topic-${id}`);
+    if (!row) return;
+    row.style.display = row.style.display === 'none' ? '' : 'none';
+  }
 
-
-function toggleTopicEdit(id) {
-  const row = document.getElementById(`edit-topic-${id}`)
-  if (!row) return
-  row.style.display = row.style.display === 'none' ? '' : 'none'
-}
+  // Prevent dropdown from closing when clicking inside
+  document.addEventListener('DOMContentLoaded', function () {
+    const dropdownMenus = document.querySelectorAll('.dropdown-menu-persist');
+    dropdownMenus.forEach(menu => {
+      menu.addEventListener('click', function (e) {
+        e.stopPropagation();
+      });
+    });
+  });
 </script>
-
-
-
-
 {% endblock %}

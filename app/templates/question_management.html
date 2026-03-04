@@ -1,0 +1,304 @@
+{% extends "layout_dashboard.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h4 class="mb-0 fw-bold"><i class="bi bi-collection me-2 text-primary"></i>Question Pool Management</h4>
+</div>
+
+<!-- ========================= -->
+<!-- COURSE SELECT -->
+<!-- ========================= -->
+<div class="card p-4 mb-4 shadow-sm bg-light border-primary border-opacity-25">
+  <label class="form-label fw-bold text-muted small mb-2"><i class="bi bi-book"></i> Select Course</label>
+  <select class="form-select form-select-lg shadow-sm" style="max-width: 600px;" onchange="changeCourse(this.value)">
+    <option value="">-- Choose a Course to Manage Questions --</option>
+    {% for c in courses %}
+    <option value="{{ c.id }}" {% if selected_course_id==c.id %}selected{% endif %}>
+      {{ c.code }} - {{ c.title }}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+
+{% if selected_course_id and template %}
+
+<!-- ========================= -->
+<!-- SECTION SELECT -->
+<!-- ========================= -->
+<div class="card p-4 mb-4 shadow-sm border-0">
+  <label class="form-label fw-bold text-muted small mb-3"><i class="bi bi-diagram-2"></i> Select Section</label>
+  <div class="d-flex gap-2 flex-wrap">
+    {% set section_names = template.categories | map(attribute='section') | list %}
+    {% for s in section_names | unique %}
+    <a href="?course_id={{ selected_course_id }}&section={{ s }}" class="btn fw-medium px-4 
+           {% if request.args.get('section') == s %}
+             btn-primary shadow-sm
+           {% else %}
+             btn-outline-primary
+           {% endif %}">
+      Section {{ s }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% set selected_section = request.args.get('section') %}
+
+{% if selected_section %}
+
+<!-- ========================= -->
+<!-- TOPIC SELECT -->
+<!-- ========================= -->
+<div class="card p-4 mb-4 shadow-sm border-0">
+  <label class="form-label fw-bold text-muted small mb-2"><i class="bi bi-journal-check"></i> Select Topic</label>
+  <select class="form-select shadow-sm" style="max-width: 600px;" onchange="changeTopic(this.value)">
+    <option value="">-- Choose a Topic --</option>
+    {% for t in topics %}
+    <option value="{{ t.id }}" {% if selected_topic_id==t.id %}selected{% endif %}>
+      {{ t.code }} - {{ t.title }}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+
+{% if selected_topic_id %}
+
+<!-- ========================= -->
+<!-- EXISTING QUESTIONS -->
+<!-- ========================= -->
+<div class="card p-4 mb-4 shadow-sm border-0">
+  <h6 class="fw-bold mb-3 text-dark border-bottom pb-2"><i class="bi bi-list-task text-primary me-1"></i> Existing
+    Questions in Topic</h6>
+
+  {% if existing_questions %}
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th width="5%">ID</th>
+          <th width="40%">Question</th>
+          <th width="10%">Type</th>
+          <th width="5%">Marks</th>
+          <th width="10%">Diff.</th>
+          <th width="10%">Bloom</th>
+          <th width="10%">Status</th>
+          <th width="10%" class="text-end">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for q in existing_questions %}
+        <tr>
+          <td><span class="text-muted fw-semibold">#{{ q.id }}</span></td>
+          <td class="fw-medium text-dark">{{ q.text }}</td>
+          <td><span class="badge bg-secondary bg-opacity-10 text-secondary border px-2">{{ q.question_type|upper
+              }}</span></td>
+          <td class="text-center fw-bold">{{ q.mark_value }}</td>
+          <td>
+            {% if q.difficulty|int <= 2 %} <span
+              class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2">
+              Easy</span>
+              {% elif q.difficulty|int == 3 %}
+              <span
+                class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-2 text-dark">Medium</span>
+              {% else %}
+              <span
+                class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2">Hard</span>
+              {% endif %}
+              <span class="small text-muted d-block text-center">Lvl {{ q.difficulty }}</span>
+          </td>
+          <td><span class="badge bg-light text-dark border">{{ q.bloom_level }}</span></td>
+
+          <td>
+            {% if q.active %}
+            <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i> Active</span>
+            {% else %}
+            <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i> Inactive</span>
+            {% endif %}
+          </td>
+
+          <td class="text-end">
+            <form method="POST" action="{{ url_for('questions.toggle_question', question_id=q.id) }}" class="m-0">
+              <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+              <button class="btn btn-sm d-inline-flex align-items-center gap-1
+                {% if q.active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                {% if q.active %}<i class="bi bi-power"></i> Deactivate{% else %}<i class="bi bi-power"></i> Activate{%
+                endif %}
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center text-muted py-5 border rounded-3 bg-light">
+    <i class="bi bi-inbox d-block fs-2 mb-2 opacity-50"></i>
+    <p class="mb-0 small">No questions found for this topic. Add one below!</p>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ========================= -->
+<!-- ADD QUESTION -->
+<!-- ========================= -->
+<div class="card shadow-sm border-0 bg-light">
+  <div class="card-header bg-white border-bottom p-4">
+    <h5 class="mb-0 fw-bold text-dark"><i class="bi bi-plus-circle text-primary me-2"></i>Add New Question</h5>
+  </div>
+
+  <div class="card-body p-4">
+    <form method="POST">
+      <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+      <input type="hidden" name="topic_id" value="{{ selected_topic_id }}">
+
+      <div class="mb-4">
+        <label class="form-label fw-semibold text-muted small">Question Text</label>
+        <textarea name="text" class="form-control" rows="3" placeholder="Type your question here..."
+          required></textarea>
+      </div>
+
+      <div class="row g-4 mb-4">
+        <!-- Question Type -->
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-muted small">Question Type</label>
+          <select id="question_type" name="question_type" class="form-select" onchange="updateMarks()" required>
+            <option value="">-- Select Type --</option>
+            {% set allowed_types = template.categories
+            | selectattr("section","equalto",selected_section)
+            | map(attribute="question_type")
+            | list %}
+            {% for t in allowed_types | unique %}
+            <option value="{{ t }}">{{ t | capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Mark Value -->
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-muted small">Marks</label>
+          <select id="mark_value" name="mark_value" class="form-select" disabled required>
+            <option value="">-- Select Marks --</option>
+          </select>
+        </div>
+
+        <!-- Difficulty -->
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-muted small">Difficulty (1-5)</label>
+          <select name="difficulty" class="form-select" required>
+            {% for i in range(1,6) %}
+            <option value="{{ i }}">{{ i }} {% if i == 1 %}(Easiest){% elif i == 5 %}(Hardest){% endif %}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Bloom Level -->
+        <div class="col-md-3">
+          <label class="form-label fw-semibold text-muted small">Bloom Level (Auto)</label>
+          <input type="text" id="bloom_level_display" class="form-control bg-white" readonly {% for t in topics %}{% if
+            selected_topic_id==t.id %}value="{{ t.bloom_level }}" {% endif %}{% endfor %}>
+          <input type="hidden" name="bloom_level" id="bloom_level_hidden" {% for t in topics %}{% if
+            selected_topic_id==t.id %}value="{{ t.bloom_level }}" {% endif %}{% endfor %}>
+        </div>
+      </div>
+
+      <!-- MCQ Options -->
+      <div id="mcq-options" class="p-4 bg-white border rounded shadow-sm mb-4" style="display:none;">
+        <h6 class="fw-bold mb-3 text-dark small">MCQ Options</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light fw-bold">A</span>
+              <input type="text" name="option_1" class="form-control" placeholder="Option 1">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light fw-bold">B</span>
+              <input type="text" name="option_2" class="form-control" placeholder="Option 2">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light fw-bold">C</span>
+              <input type="text" name="option_3" class="form-control" placeholder="Option 3">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="input-group input-group-sm">
+              <span class="input-group-text bg-light fw-bold">D</span>
+              <input type="text" name="option_4" class="form-control" placeholder="Option 4">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-end">
+        <button class="btn btn-primary px-4 fw-medium d-inline-flex align-items-center gap-2 shadow-sm">
+          <i class="bi bi-plus-lg"></i> Add Question
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+{% endif %}
+{% endif %}
+{% endif %}
+
+<script>
+  function changeCourse(courseId) {
+    if (!courseId) return;
+    window.location.href = "?course_id=" + courseId;
+  }
+
+  function changeTopic(topicId) {
+    const params = new URLSearchParams(window.location.search);
+    const courseId = params.get("course_id");
+    const section = params.get("section");
+
+    const topics = {{ topics | tojson | safe
+  }};
+  const topic = topics.find(t => t.id == topicId);
+  const bloomDisplay = document.getElementById("bloom_level_display");
+  const bloomHidden = document.getElementById("bloom_level_hidden");
+
+  if (topic && bloomDisplay && bloomHidden) {
+    bloomDisplay.value = topic.bloom_level;
+    bloomHidden.value = topic.bloom_level;
+  }
+
+  if (topicId) {
+    window.location.href = "?course_id=" + courseId + "&section=" + section + "&topic_id=" + topicId;
+  } else {
+    window.location.href = "?course_id=" + courseId + "&section=" + section;
+  }
+  }
+
+  function updateMarks() {
+    const type = document.getElementById("question_type").value;
+    const markSelect = document.getElementById("mark_value");
+    const mcqSection = document.getElementById("mcq-options");
+
+    markSelect.innerHTML = '<option value="">-- Select Marks --</option>';
+
+    const template = {{ template.categories | tojson | safe if template else '[]'
+  }};
+  const section = "{{ selected_section }}";
+
+  const allowed = template.filter(s => s.section === section && s.question_type === type);
+
+  allowed.forEach(s => {
+    const opt = document.createElement("option");
+    opt.value = s.mark_per_question;
+    opt.text = s.mark_per_question + " Marks";
+    markSelect.appendChild(opt);
+  });
+
+  markSelect.disabled = false;
+  mcqSection.style.display = type === "mcq" ? "block" : "none";
+  }
+</script>
+
+{% endblock %}

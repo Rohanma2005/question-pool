@@ -1,0 +1,43 @@
+Template Categories:
+  Section A: Type=descriptive, Marks=1, Required=5
+  Section B: Type=descriptive, Marks=5, Required=2
+  Section C: Type=descriptive, Marks=15, Required=1
+
+Topics:
+  ID 1: Problem Solving Life Cycle – Understanding the Problem
+Statement, Analysing the problem,
+Planning Program design using Hierarchy charts, Topdown approach, Bottom-up approach.
+Understanding basic Problem-Solving Tools: Algorithms:
+Definition & its attributes, Flowchart: Definition & its
+attributes, symbols, Statements: Input-Output, DecisionMaking &Looping, Module representation
+  ID 2: Introduction to Programming: Computer program.
+Classification of computer languages: machine, assembly
+and high-level languages, Language translators
+(Assembler, Compiler, Interpreter), Linker, Testing and
+debugging,
+  ID 3: Types of errors- Syntax errors, Logical errors and Runtime
+errors.
+  ID 4: C Character Set, Delimiters, Types of Tokens, C
+Keywords, Identifiers, Constants, Variables, Rules for
+defining variables,
+  ID 5: Data types, C data types, Declaring and initialization of
+variables, Type modifiers, Type conversion, Operators
+and Expressions
+  ID 6: Properties of operators, Priority of operators, Comma and
+conditional operator, Arithmetic operators, Relational
+operators,
+  ID 7: Assignment operators and expressions, Logical
+Operators, Bitwise operators.
+  ID 8: Input and Output in C – Formatted functions,
+unformatted functions, commonly used library functions,
+
+Questions in Pool:
+  ID 1: Topic=1, Diff=1, Marks=5, Type=descriptive, Active=1
+  ID 2: Topic=1, Diff=4, Marks=1, Type=descriptive, Active=1
+  ID 3: Topic=1, Diff=1, Marks=1, Type=descriptive, Active=1
+  ID 4: Topic=1, Diff=1, Marks=1, Type=descriptive, Active=1
+  ID 5: Topic=1, Diff=4, Marks=1, Type=descriptive, Active=1
+  ID 6: Topic=1, Diff=1, Marks=1, Type=descriptive, Active=1
+  ID 7: Topic=2, Diff=1, Marks=1, Type=descriptive, Active=1
+  ID 8: Topic=1, Diff=1, Marks=5, Type=descriptive, Active=1
+  ID 9: Topic=2, Diff=1, Marks=15, Type=descriptive, Active=1

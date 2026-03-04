@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, session
 from werkzeug.security import check_password_hash, generate_password_hash
 from ..extensions import db
 from ..models import SuperAdmin, Faculty
+from ..utils.auth import initialize_user_session
 
 api_auth_bp = Blueprint('api_auth', __name__)
 
@@ -22,9 +23,8 @@ def api_superadmin_login():
     if not admin or not admin.check_password(password):
         return jsonify({"msg": "Bad credentials"}), 401
 
-    session['user_id'] = admin.id
-    session['role'] = 'super_admin'
-    session['email'] = admin.email
+    # Initialize fresh session for this user
+    initialize_user_session(admin.id, 'super_admin')
     
     return jsonify({"msg": "Login successful"}), 200
 

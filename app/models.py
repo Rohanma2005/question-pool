@@ -82,6 +82,7 @@ class Faculty(db.Model):
     )
 
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    active = db.Column(db.Boolean, nullable=False, default=True)
 
 
 # =====================================================
@@ -92,6 +93,9 @@ class Programme(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
+    level = db.Column(db.String(10), nullable=False, default='ug')
+    batch = db.Column(db.String(32), nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
 
     department_id = db.Column(
         db.Integer,
@@ -151,10 +155,10 @@ class Course(db.Model):
         lazy=True
     )
 
-    # ONE template per course (GLOBAL)
-    template = db.relationship(
+    # Multiple templates per course for versioning (only one active at a time)
+    templates = db.relationship(
         'Template',
-        uselist=False,
+        uselist=True,
         backref='course',
         cascade='all,delete'
     )
@@ -195,7 +199,7 @@ class ProgrammeCourseOffering(db.Model):
     faculty_id = db.Column(
         db.Integer,
         db.ForeignKey('tbl_faculty.id'),
-        nullable=False
+        nullable=True
     )
 
     faculty = db.relationship('Faculty')
@@ -223,6 +227,7 @@ class CourseOutcome(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     code = db.Column(db.String(32), nullable=False)
     description = db.Column(db.Text, nullable=False)
+    bloom_level = db.Column(db.String(32), nullable=False, default='Understand')
 
     # NEW FIELD
     learning_domains = db.Column(db.JSON, nullable=False, default=list)
@@ -288,9 +293,11 @@ class Template(db.Model):
     course_id = db.Column(
         db.Integer,
         db.ForeignKey('tbl_courses.id'),
-        nullable=False,
-        unique=True
+        nullable=False
     )
+
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     duration_minutes = db.Column(db.Integer, nullable=False)
     total_marks = db.Column(db.Integer, nullable=False)
@@ -319,10 +326,34 @@ class Question(db.Model):
     )
 
     text = db.Column(db.Text, nullable=False)
+
+    question_type = db.Column(
+        db.String(32),  # 'mcq' or 'descriptive'
+        nullable=False
+    )
+
     mark_value = db.Column(db.Integer, nullable=False)
-    bloom_level = db.Column(db.String(32), nullable=False)
-    difficulty = db.Column(db.Integer, nullable=True)
+
+    difficulty = db.Column(
+        db.Integer,  # 1–5 scale recommended
+        nullable=False
+    )
+
+    bloom_level = db.Column(
+        db.String(32),
+        nullable=False
+    )
+
+    options = db.Column(
+        db.JSON,  # Only for MCQ
+        nullable=True
+    )
+
     active = db.Column(db.Boolean, default=True)
+
+    topic = db.relationship('Topic', backref='questions')
+
+
 
 
 # =====================================================
@@ -332,10 +363,21 @@ class GeneratedPaper(db.Model):
     __tablename__ = 'tbl_generated_papers'
 
     id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, nullable=False)
-    template_id = db.Column(db.Integer, nullable=False)
+    course_id = db.Column(
+        db.Integer, 
+        db.ForeignKey('tbl_courses.id'),
+        nullable=False
+    )
+    template_id = db.Column(
+        db.Integer,
+        db.ForeignKey('tbl_templates.id'),
+        nullable=False
+    )
     total_marks = db.Column(db.Integer, nullable=False)
     duration_minutes = db.Column(db.Integer, nullable=False)
+
+    course = db.relationship('Course', backref='generated_papers')
+    template = db.relationship('Template', backref='generated_papers')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     generated_by = db.Column(

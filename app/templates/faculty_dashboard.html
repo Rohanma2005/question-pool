@@ -1,42 +1,53 @@
-{% extends "layout_faculty.html" %}
+{% extends "layout_dashboard.html" %}
+{% block title %}Dashboard{% endblock %}
+
 {% block content %}
+<h4 class="mb-4"><span class="text-muted fw-normal">Welcome back,</span> <span class="fw-bold">{{ faculty.name }}</span>
+</h4>
 
-<h4>Welcome, {{ faculty.name }}</h4>
-
-<div class="card mt-3 p-3">
-  <h5>Assigned Courses</h5>
+<div class="card p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h5 class="mb-0 fw-bold"><i class="bi bi-book me-2 text-primary"></i>Assigned Courses</h5>
+  </div>
 
   {% if offerings %}
-    <table class="table table-bordered">
-      <thead>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light">
         <tr>
-          <th>Course</th>
-          <th>Programme</th>
-          <th>Semester</th>
-          <th>Action</th>
+          <th width="35%">Course</th>
+          <th width="35%">Programme</th>
+          <th width="15%">Semester</th>
+          <th width="15%" class="text-end">Action</th>
         </tr>
       </thead>
       <tbody>
         {% for o in offerings %}
-          <tr>
-            <td>{{ o.course.code }} - {{ o.course.title }}</td>
-            <td>{{ o.programme.name }}</td>
-            <td>{{ o.semester_no }}</td>
-            <td>
-              <a href="{{ url_for('courses.course_detail', course_id=o.course.id) }}"
-                 class="btn btn-sm btn-outline-primary">
-                 View
-              </a>
-            </td>
-          </tr>
+        <tr>
+          <td class="fw-medium text-dark">
+            <span class="badge bg-light text-dark border me-2 py-1 px-2">{{ o.course.code }}</span>
+            {{ o.course.title }}
+          </td>
+          <td>{{ o.programme.name }}</td>
+          <td><span class="badge bg-info bg-opacity-10 text-primary border border-info border-opacity-25 px-2 py-1">Sem
+              {{ o.semester_no }}</span></td>
+          <td class="text-end">
+            <a href="{{ url_for('courses.course_detail', course_id=o.course.id) }}"
+              class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3">
+              <i class="bi bi-gear"></i> Manage
+            </a>
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
+  </div>
   {% else %}
-    <div class="alert alert-secondary">
-      No assigned courses.
-    </div>
+  <div class="text-center text-muted py-5">
+    <i class="bi bi-inbox fs-2 d-block mb-3 text-secondary opacity-50"></i>
+    <h6 class="fw-medium text-dark mb-1">No Assigned Courses</h6>
+    <p class="mb-0 small">You currently have no courses assigned to you for this semester.</p>
+  </div>
   {% endif %}
 </div>
-
 {% endblock %}

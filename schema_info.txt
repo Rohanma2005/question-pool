@@ -1,0 +1,11 @@
+Columns in 'tbl_questions':
+COL: id | TYPE: int
+COL: course_id | TYPE: int
+COL: topic_id | TYPE: int
+COL: text | TYPE: text
+COL: mark_value | TYPE: int
+COL: active | TYPE: tinyint(1)
+COL: bloom_level | TYPE: varchar(32)
+COL: difficulty | TYPE: int
+COL: question_type | TYPE: varchar(32)
+COL: options | TYPE: json
